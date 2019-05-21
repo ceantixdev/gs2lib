@@ -19,11 +19,139 @@
 #  along with GS2Emu.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-cmake_minimum_required(VERSION 2.4.4)
+cmake_minimum_required(VERSION 2.8.5)
 
 project(gs2lib CXX)
 
-set(VERSION "1.0")
+set(CMAKE_DEBUG_POSTFIX _d)
+
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/${BIN_DIR})
+
+# Second, for multi-config builds (e.g. msvc)
+foreach( OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES} )
+	string( TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG )
+	set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${PROJECT_SOURCE_DIR}/lib )
+	set( CMAKE_LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${PROJECT_SOURCE_DIR}/lib )
+	set( CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${PROJECT_SOURCE_DIR}/${BIN_DIR} )
+endforeach( OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES )
+
+link_directories(${PROJECT_SOURCE_DIR}/lib)
+
+# Adhere to GNU filesystem layout conventions
+include(GNUInstallDirs)
+
+# Lowercase project name for binaries and packaging
+string(TOLOWER ${PROJECT_NAME} PROJECT_NAME_LOWER)
+
+# Additional CMake modules
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
+
+if(APPLE)
+	# Set variables for generating the Info.plist file
+	set(MACOSX_BUNDLE_BUNDLE_VERSION "${VER_FULL}")
+	set(MACOSX_BUNDLE_EXECUTABLE ${PROJECT_NAME})
+	set(MACOSX_BUNDLE_GUI_IDENTIFIER "com.GraalReborn.GS2Lib")
+	set(MACOSX_BUNDLE_NSMAIN_NIB_FILE "Application")
+	set(MACOSX_BUNDLE_ICON_FILE "carton")
+	set(MACOSX_BUNDLE_NAME ${PROJECT_NAME})
+	set(MACOSX_BUNDLE_SHORT_VERSION_STRING "${VER_FULL}")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -std=gnu++17")
+elseif(WIN32)
+	# Visual C++ Compiler options
+	if(MSVC)
+		# Suppress secure string function warnings
+		add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+
+		include(CheckCXXCompilerFlag)
+		CHECK_CXX_COMPILER_FLAG("/std:c++latest" _cpp_latest_flag_supported)
+		if (_cpp_latest_flag_supported)
+			add_compile_options("/std:c++latest")
+			set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:CONSOLE")
+		endif()
+
+		# Enable parallel compilation
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /MP")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
+		
+		# Enable static linkage of the Microsoft Visual C/C++ Runtime
+		set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /MTd")
+		set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /MT")
+		set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} /MTd")
+		set(CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS_MINSIZEREL} /MT")
+		set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
+		set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
+		set(
+			CMAKE_CXX_FLAGS_RELWITHDEBINFO
+			"${CMAKE_CXX_FLAGS_RELWITHDEBINFO} /MTd"
+		)
+		set(CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS_MINSIZEREL} /MT")
+		cmake_policy(SET CMP0043 NEW)
+	endif()
+
+	if( MINGW )
+		add_definitions(-D__STDC_FORMAT_MACROS)
+		add_definitions(-D__USE_MINGW_ANSI_STDIO=1)
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++17")
+	endif()
+
+	# Prevent Windows.h from clashing with the Standard Template Library so we
+	# can use std::min/std::max (see https://support.microsoft.com/kb/143208)
+	add_definitions(-DNOMINMAX)
+
+elseif(AROS)
+elseif(AMIGA)
+else()
+	if(NOT NOSTATIC)
+	#	SET(CMAKE_EXE_LINKER_FLAGS "-static")
+	endif()
+
+	add_definitions(-D_DEFAULT_SOURCE -D_POSIX_C_SOURCE=1)
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++17")
+
+endif()
+
+option(NOSTATIC "Don't compile as a static runtime." OFF)
+if(NOSTATIC)
+	message("Don't compile as a static runtime.")
+	set(BUILD_SHARED_LIBS TRUE CACHE BOOL "-" FORCE)
+else()
+	message("Compile as static runtime.")
+	add_definitions(-DSTATICLIB)
+	set(BUILD_SHARED_LIBS FALSE CACHE BOOL "-" FORCE)
+endif()
+
+# Prefer static linkage
+if(NOT NOSTATIC)
+	set(SUFFIXES_ORIG ${CMAKE_FIND_LIBRARY_SUFFIXES})
+	set(CMAKE_FIND_LIBRARY_SUFFIXES .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
+endif()
+
+find_package(ZLIB)
+if(NOT ZLIB_FOUND)
+	message("Zlib not found in system. Compiling it ourselves.")
+	add_subdirectory(${PROJECT_SOURCE_DIR}/dependencies/zlib EXCLUDE_FROM_ALL)
+	if(NOSTATIC)
+		set_target_properties(zlibstatic minigzip example PROPERTIES EXCLUDE_FROM_ALL 1 EXCLUDE_FROM_DEFAULT_BUILD 1)
+	else()
+		set_target_properties(zlib minigzip example PROPERTIES EXCLUDE_FROM_ALL 1 EXCLUDE_FROM_DEFAULT_BUILD 1)
+	endif()
+endif()
+
+find_package(BZip2)
+if(NOT BZip2_FOUND)
+	message("Bzip2 not found in system. Compiling it ourselves.")
+	add_subdirectory(${PROJECT_SOURCE_DIR}/dependencies/bzip2)
+endif()
+
+# Restore library suffixes
+if(NOT NOSTATIC)
+	set(CMAKE_FIND_LIBRARY_SUFFIXES ${SUFFIXES_ORIG})
+endif()
 
 set(
 	SOURCES
@@ -45,7 +173,6 @@ set(
 	include/CEncryption.h
 	include/CFileQueue.h
 	include/CLog.h
-	include/CPlugin.h
 	include/CSettings.h
 	include/CSocket.h
 	include/CString.h
@@ -61,16 +188,12 @@ include_directories(
 	${PROJECT_SOURCE_DIR}/include
 )
 
-if(NOT NOUPNP AND NOT MINIUPNPC_FOUND)
-	include_directories(${PROJECT_SOURCE_DIR}/../miniupnp ${PROJECT_SOURCE_DIR}/../miniupnp/miniupnpc)
-endif()
-
 if(NOT ZLIB_FOUND)
-	include_directories(${PROJECT_BINARY_DIR}/../zlib ${PROJECT_SOURCE_DIR}/../zlib)
+	include_directories(${PROJECT_BINARY_DIR}/dependencies/zlib ${PROJECT_SOURCE_DIR}/dependencies/zlib)
 endif()
 
 if(NOT BZip2_FOUND)
-	include_directories(${PROJECT_SOURCE_DIR}/../bzip2)
+	include_directories(${PROJECT_SOURCE_DIR}/dependencies/bzip2)
 endif()
 
 # Set target names for the libraries
@@ -101,16 +224,3 @@ if(WIN32)
 	target_link_libraries(${TARGET_NAME} ws2_32 wsock32 iphlpapi)
 endif()
 
-if(NOT NOUPNP)
-	if(NOT MINIUPNPC_FOUND)
-		if(NOSTATIC)
-			add_dependencies(${TARGET_NAME} libminiupnpc-shared)
-			target_link_libraries(${TARGET_NAME} libminiupnpc-shared)
-		else()
-			add_dependencies(${TARGET_NAME} libminiupnpc-static)
-			target_link_libraries(${TARGET_NAME} libminiupnpc-static)
-		endif()
-	else()
-		target_link_libraries(${TARGET_NAME} ${MINIUPNP_LIBRARIES})
-	endif()
-endif()

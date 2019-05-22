@@ -93,7 +93,7 @@ elseif(WIN32)
 
 	if( MINGW )
 		add_definitions(-D__STDC_FORMAT_MACROS)
-		add_definitions(-D__USE_MINGW_ANSI_STDIO=1)
+		add_definitions(-D_BSD_SOURCE=1)
 		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99")
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++17")
 	endif()

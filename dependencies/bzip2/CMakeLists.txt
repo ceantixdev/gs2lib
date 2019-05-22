@@ -54,7 +54,3 @@ elseif(AMIGA)
 else()
     add_library(${TARGET_NAME} ${SOURCES} ${HEADERS})
 endif()
-
-set(INSTALL_DEST .)
-
-install(TARGETS ${TARGET_NAME} DESTINATION ${INSTALL_DEST})

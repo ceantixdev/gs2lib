@@ -245,13 +245,14 @@ enum
 	PLO_RAWDATA					= 100,	// {100}{INT3 length}  Codr note: Unhandled by 5.07+.
 	PLO_BOARDPACKET				= 101,
 	PLO_FILE					= 102,
-	PLO_UNKNOWN103				= 103,
+	PLO_RC_MAXUPLOADFILESIZE	= 103,	// {GINT5} - Upload file size limit in bytes. Default to 20 mebibytes
 	PLO_UNKNOWN104				= 104,	// Valid message in 5.07 and 6.037.  The code it uses is unique. -Codr
 	PLO_UNKNOWN105				= 105,	// Valid message in 5.07 and 6.037.  The code it uses is unique. -Codr
 	PLO_UNKNOWN106				= 106,	// Valid message in 5.07 and 6.037.  The code it uses is unique. -Codr
 	PLO_UNKNOWN107				= 107,	// Basically PLO_LEVELBOARD for extra level layers.
 	PLO_UNKNOWN109				= 109,	// Valid message in 6.037. -Codr
 	PLO_UNKNOWN111				= 111,	// Valid message in 6.037. -Codr
+	PLO_UNKNOWN124				= 124,	// 5/26/2019: RC3 receives this, only hint I seen was regarding receiving player flags? Didn't try to test it though 
 	PLO_NPCBYTECODE				= 131,	// Compiled Torque-script for an NPC. {131}{INT3 id}{code}
 	PLO_UNKNOWN132				= 132,	// Valid message in 5.07.  The code it uses is unique.  Unhandled by 6.037. -Codr
 	PLO_UNKNOWN133				= 133,	// Valid message in 5.07.  The code it uses is unique.  Unhandled by 6.037. -Codr
@@ -296,7 +297,7 @@ enum
 	PLO_UNKNOWN187				= 187,	// Valid message in 5.07 and 6.037.  The code it uses is unique. -Codr
 	PLO_NC_CLASSDELETE			= 188,	// {188}{class}  Codr note: Unhandled by 5.07+.
 	PLO_MOVE2					= 189,	// {189}{INT id}...
-	PLO_UNKNOWN190				= 190,	// Was blank.  Sent before weapon list.
+	PLO_UNKNOWN190				= 190,	// Was blank.  Sent before weapon list. NOTE: Sending this packet makes the client login to irc, request bantypes, pmguilds, pmservers, globalpms, buddytracking and stuff... Mainly tied to setTex
 	PLO_UNKNOWN191				= 191,	// Valid message in 5.07 and 6.037.  The code it uses is unique. -Codr
 	PLO_NC_WEAPONGET			= 192,	// {192}{CHAR name length}{name}{CHAR image length}{image}{script}  Codr note: Unhandled by 5.07+.
 	PLO_UNKNOWN193				= 193,	// Valid message in 5.07.  The code it uses is unique.  The first parameter is likely a 5-byte integer.  There may be more.  Unhandled by 6.037. -Codr

@@ -120,6 +120,14 @@ static const char* const clientVersions[] =
 	0
 };
 
+static const char* const ncVersions[] =
+{
+	"",				// NCVER_UNKNOWN,
+	"NCL11012",		// NCVER_1_1,
+	"NCL21075",		// NCVER_2_1,
+	0
+};
+
 static const char* const rcVersions[] =
 {
 	"",				// RCVER_UNKNOWN,
@@ -201,16 +209,22 @@ static const char* const clientVersionString[] =
 	0
 };
 
-static const char* const rcVersionString[] =
+static const char* const ncVersionString[] =
 {
-	"",				// RCVER_UNKNOWN,
-	"1.010",		// RCVER_1_010,
-	"1.1",			// RCVER_1_1,
-	"2.0",			// RCVER_2,
+	"",			// NCVER_UNKNOWN,
+	"1.1",		// NCVER_1_1,
+	"2.1",		// NCVER_2_1,
 	0
 };
 
-
+static const char* const rcVersionString[] =
+{
+	"",			// RCVER_UNKNOWN,
+	"1.010",	// RCVER_1_010,
+	"1.1",		// RCVER_1_1,
+	"2.0",		// RCVER_2,
+	0
+};
 
 int getVersionID(const CString& version)
 {
@@ -239,6 +253,11 @@ const char* getVersionString(const CString& version, const int type)
 			if (version == CString(rcVersions[i]))
 				return rcVersionString[i];
 		}
+		else if ((type & PLTYPE_ANYNC) != 0)
+		{
+			if (version == CString(ncVersions[i]))
+				return ncVersionString[i];
+		}
 		else if ((type & PLTYPE_NPCSERVER) != 0)
 		{
 			if (version == CString(clientVersions[i]))
@@ -247,6 +266,18 @@ const char* getVersionString(const CString& version, const int type)
 		++i;
 	}
 	return 0;
+}
+
+int getNCVersionID(const CString& version)
+{
+	int i = 0;
+	while (ncVersions[i] != 0)
+	{
+		if (version == CString(ncVersions[i]))
+			return i;
+		++i;
+	}
+	return NCVER_UNKNOWN;
 }
 
 int getRCVersionID(const CString& version)

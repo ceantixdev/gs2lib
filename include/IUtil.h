@@ -216,6 +216,13 @@ enum
 
 enum
 {
+	NCVER_UNKNOWN,
+	NCVER_1_1,
+	NCVER_2_1,
+};
+
+enum
+{
 	RCVER_UNKNOWN,
 	RCVER_1_010,
 	RCVER_1_1,
@@ -224,6 +231,7 @@ enum
 
 int getVersionID(const CString& version);
 const char* getVersionString(const CString& version, const int type);
+int getNCVersionID(const CString& version);
 int getRCVersionID(const CString& version);
 signed char getColor(const CString& color);
 CString removeComments(const CString& code, const CString& newLine = "\n");

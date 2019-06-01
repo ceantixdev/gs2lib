@@ -249,10 +249,11 @@ CString CString::readString(const CString& pString)
 	CString retVal;
 	if (readc > sizec) return retVal;
 
-	int len;
-	len = (pString.isEmpty() ? -1 : find(pString, readc) - readc);
-	len = (len < 0 ? bytesLeft() : len);
-	len = (len > bytesLeft() ? bytesLeft() : len); //
+	int len = -1;
+	if (!pString.isEmpty())
+		len = find(pString, readc) - readc;
+	if (len < 0 || len > bytesLeft())
+		len = bytesLeft();
 	retVal.write(&buffer[readc], len);
 
 	// If len was set to bytesLeft(), it MIGHT have pString.

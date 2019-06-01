@@ -815,6 +815,18 @@ CString CString::guntokenize() const
 			// A quotation mark in a non-quoted string.
 			else retVal << buffer[i];
 		}
+		// Unescape '\' character
+		else if (buffer[i] == '\\')
+		{
+			if (i + 1 < length())
+			{
+				if (buffer[i + 1] == '\\')
+				{
+					retVal << "\\";
+					i++;
+				}
+			}
+		}
 		// Anything else gets put to the output.
 		else retVal << buffer[i];
 	}

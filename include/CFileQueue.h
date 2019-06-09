@@ -30,9 +30,10 @@
 class CFileQueue
 {
 	public:
-		CFileQueue(CSocket* pSock) : sock(pSock), prev100(false), bytesSentWithoutFile(0) {}
+		CFileQueue(CSocket* pSock) : sock(pSock), prev100(false), size100(0), bytesSentWithoutFile(0) {}
 
 		void addPacket(CString pPacket);
+		void clearBuffers();
 		void setSocket(CSocket* pSock)		{ sock = pSock; }
 		void setCodec(unsigned int gen, unsigned char key)
 		{

@@ -81,6 +81,16 @@ void CFileQueue::addPacket(CString pPacket)
 	}
 }
 
+void CFileQueue::clearBuffers()
+{
+	std::queue<CString>().swap(normalBuffer);
+	std::queue<CString>().swap(fileBuffer);
+	bytesSentWithoutFile = 0;
+	size100 = 0;
+	prev100 = false;
+	oBuffer.clear();
+}
+
 bool CFileQueue::canSend()
 {
 	if (normalBuffer.size() != 0 || fileBuffer.size() != 0) return true;
@@ -143,11 +153,16 @@ void CFileQueue::sendCompress()
 	// compress buffer
 	switch (out_codec.getGen())
 	{
+		// Hijacking this: just send whatever is in the buffer
 		case ENCRYPT_GEN_1:
-		case ENCRYPT_GEN_2:
-			printf("** Generations 1 and 2 are not supported!\n");
+		{
+			oBuffer << pSend;
+			unsigned int dsize = oBuffer.length();
+			oBuffer.removeI(0, sock->sendData(oBuffer.text(), &dsize));
 			break;
+		}
 
+		case ENCRYPT_GEN_2:
 		case ENCRYPT_GEN_3:
 		{
 			// Compress the packet.

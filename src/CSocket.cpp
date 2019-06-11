@@ -671,13 +671,14 @@ char* CSocket::getData(unsigned int* dsize)
 				SLOG("%s - Connection lost!  Reason: %s\n", properties.description, errorMessage(intError));
 				disconnect();
 				break;
+
 			default:
 				break;
 		}
 	}
 
 	// If size is 0, the socket was disconnected.
-	if (size == 0)
+	if (size == 0 && intError != EWOULDBLOCK)
 		disconnect();
 
 	// Set dsize to how much data was returned.
@@ -860,26 +861,6 @@ int CSocket::socketSystemInit()
 		SLOG("Failed to initialize winsocks!  Wasn't version 2.2!\n");
 		WSACleanup();
 		return 1;
-	}
-#elif defined(PSPSDK)
-	if (sceUtilityLoadNetModule(PSP_NET_MODULE_COMMON) < 0)
-		return -1;
-	if (sceUtilityLoadNetModule(PSP_NET_MODULE_INET) < 0)
-		return -1;
-	if (pspSdkInetInit() != 0)
-		return -2; // false
-	if (sceNetApctlConnect(1) != 0)
-		return -3;
-
-	while (true)
-	{
-		int state = 0;
-		if (sceNetApctlGetState(&state) != 0)
-			return -3;
-		if (state == 4)
-			break;
-
-		sceKernelDelayThread(1000 * 50); // 50ms
 	}
 #endif
 

@@ -733,7 +733,7 @@ CString CString::gtokenize() const
 			if (temp[0] == '"') complex = true;
 			for (int i = 0; i < temp.length() && !complex; ++i)
 			{
-				if (temp[i] < 33 || temp[i] > 126 || temp[i] == 44)
+				if (temp[i] < 33 || temp[i] > 126 || temp[i] == 44 || temp[i] == 47)
 					complex = true;
 			}
 
@@ -744,6 +744,7 @@ CString CString::gtokenize() const
 			// Put complex words inside quotation marks.
 			if (complex)
 			{
+				temp.replaceAllI("\\", "\\\\");		// Escape '\'
 				temp.replaceAllI( "\"", "\"\"" );	// Change all " to ""
 				retVal << "\"" << temp << "\",";
 			}

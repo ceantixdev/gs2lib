@@ -835,6 +835,86 @@ CString CString::guntokenize() const
 	return retVal;
 }
 
+std::vector<CString> CString::gCommaStrTokens() const
+{
+	std::vector<CString> retData;
+
+	CString line;
+	bool is_paren = false;
+
+	// Check to see if we are starting with a quotation mark.
+	int i = 0;
+	if (buffer[0] == '"')
+	{
+		is_paren = true;
+		++i;
+	}
+
+	// Untokenize.
+	for (; i < length(); ++i)
+	{
+		// If we encounter a comma not inside a quoted string, we are encountering
+		// a new index.  Replace the comma with a newline.
+		if (buffer[i] == ',' && !is_paren)
+		{
+			retData.push_back(line);
+			line.clear();
+
+			// Ignore whitespace.
+			while (i + 1 < length() && buffer[i + 1] == ' ')
+				++i;
+
+			// Check to see if the next string is quoted.
+			if (i + 1 < length() && buffer[i + 1] == '"')
+			{
+				is_paren = true;
+				++i;
+			}
+		}
+		// We need to handle quotation marks as they have different behavior in quoted strings.
+		else if (buffer[i] == '"')
+		{
+			// If we are encountering a quotation mark in a quoted string, we are either
+			// ending the quoted string or escaping a quotation mark.
+			if (is_paren)
+			{
+				if (i + 1 < length())
+				{
+					// Escaping a quotation mark.
+					if (buffer[i + 1] == '"')
+					{
+						line << "\"";
+						++i;
+					}
+					// Ending the quoted string.
+					else if (buffer[i + 1] == ',')
+						is_paren = false;
+				}
+			}
+			// A quotation mark in a non-quoted string.
+			else line << buffer[i];
+		}
+		// Unescape '\' character
+		else if (buffer[i] == '\\')
+		{
+			if (i + 1 < length())
+			{
+				if (buffer[i + 1] == '\\')
+				{
+					line << "\\";
+					i++;
+				}
+			}
+		}
+		// Anything else gets put to the output.
+		else line << buffer[i];
+	}
+
+	if (is_paren)
+		retData.push_back(line);
+	return retData;
+}
+
 bool CString::match(const CString& pMask) const
 {
 	char stopstring[1];

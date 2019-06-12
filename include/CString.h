@@ -118,6 +118,7 @@ class CString
 		CString replaceAll(const CString& pString, const CString& pNewString) const;
 		CString gtokenize() const;
 		CString guntokenize() const;
+		std::vector<CString> gCommaStrTokens() const;
 		bool match(const CString& pMask) const;
 		bool comparei(const CString& pOther) const;
 		bool contains(const CString& characters) const;

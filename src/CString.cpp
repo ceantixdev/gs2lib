@@ -910,7 +910,7 @@ std::vector<CString> CString::gCommaStrTokens() const
 		else line << buffer[i];
 	}
 
-	if (is_paren)
+	if (is_paren || !line.isEmpty())
 		retData.push_back(line);
 	return retData;
 }

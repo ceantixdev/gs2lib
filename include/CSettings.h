@@ -36,6 +36,7 @@ struct CKey
 
 	CString name;
 	CString value;
+	bool saved = false;
 };
 
 class CSettings
@@ -49,6 +50,7 @@ class CSettings
 		// File-Loading Functions
 		bool isOpened() const;
 		bool loadFile(const CString& pStr);
+		bool saveFile();
 		void setSeparator(const CString& pSeparator);
 		void clear();
 
@@ -69,6 +71,7 @@ class CSettings
 	private:
 		bool opened;
 		CString strSep;
+		CString filename;
 		std::vector<CKey *> keys;
 		std::vector<CString> strList;
 

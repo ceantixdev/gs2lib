@@ -59,9 +59,55 @@ void CSettings::setSeparator(const CString& pSeparator)
 	strSep = pSeparator;
 }
 
+bool CSettings::saveFile()
+{
+	CString options = CString();
+	options.clear();
+	std::vector<CString> oldOptions = CString::loadToken(filename, "\n", true);
+
+	for (auto & newOption : oldOptions)
+	{
+		if (newOption.find("#") != -1)
+		{
+			options << newOption << "\n";
+			continue;
+		}
+
+		if (newOption.isEmpty() || newOption.find(strSep) == -1)
+		{
+			options << "\n";
+			continue;
+		}
+
+		CString name = newOption.subString(0, newOption.find("="));
+		name.trimI();
+
+		CKey *option = this->getKey(name);
+		newOption = CString() << name << " = " << option->value;
+
+		option->saved = true;
+
+		// Add this line back into options.
+		options << newOption << "\n";
+	}
+
+	for (auto & key : keys)
+	{
+		if (!key->saved)
+			options << key->name << " = " << key->value << "\n";
+
+		key->saved = false;
+	}
+
+	options.replaceAllI("\n", "\r\n");
+	return options.save(filename);
+}
+
 bool CSettings::loadFile(const CString& pStr)
 {
 	std::lock_guard<std::recursive_mutex> lock(*m_preventChange);
+
+	filename = pStr;
 
 	// definitions
 	CString fileData;
@@ -79,19 +125,19 @@ bool CSettings::loadFile(const CString& pStr)
 	// Parse Data
 	fileData.removeAllI("\r");
 	strList = fileData.tokenize("\n");
-	for (unsigned int i = 0; i < strList.size(); i++)
+	for (auto & i : strList)
 	{
 		// Strip out comments.
-		int comment_pos = strList[i].find("#");
+		int comment_pos = i.find("#");
 		if (comment_pos != -1)
-			strList[i].removeI(comment_pos);
+			i.removeI(comment_pos);
 
 		// Skip invalid or blank lines.
-		if (strList[i].isEmpty() || strList[i].find(strSep) == -1)
+		if (i.isEmpty() || i.find(strSep) == -1)
 			continue;
 
 		// Tokenize Line && Trim && Lowercase Key Name
-		std::vector<CString> line = strList[i].tokenize(strSep);
+		std::vector<CString> line = i.tokenize(strSep);
 		line[0].toLowerI();
 		if (line.size() == 1) continue;
 
@@ -103,12 +149,12 @@ bool CSettings::loadFile(const CString& pStr)
 		}
 
 		// Trim
-		for (unsigned int j = 0; j < line.size(); j++)
-			line[j].trimI();
+		for (auto & j : line)
+			j.trimI();
 
 		// Create Key
 		CKey *key;
-		if ((key = getKey(line[0])) == 0)
+		if ((key = getKey(line[0])) == nullptr)
 			keys.push_back(new CKey(line[0], line[1]));
 		else
 			key->value << "," << line[1];
@@ -123,8 +169,8 @@ void CSettings::clear()
 	std::lock_guard<std::recursive_mutex> lock(*m_preventChange);
 
 	// Clear Keys
-	for (unsigned int i = 0; i < keys.size(); i++)
-		delete keys[i];
+	for (auto & key : keys)
+		delete key;
 	keys.clear();
 }
 
@@ -134,9 +180,9 @@ bool CSettings::exists(const CString& pKey) const
 	CString strName = pKey.toLower();
 
 	// Iterate key List
-	for (std::vector<CKey *>::const_iterator i = keys.begin(); i != keys.end(); ++i)
+	for (auto key : keys)
 	{
-		if ((*i)->name == strName)
+		if (key->name == strName)
 			return true;
 	}
 
@@ -168,10 +214,10 @@ CKey * CSettings::getKey(const CString& pStr)
 	CString strName = pStr.toLower();
 
 	// Iterate key List
-	for (std::vector<CKey *>::iterator i = keys.begin(); i != keys.end(); ++i)
+	for (auto & key : keys)
 	{
-		if ((*i)->name == strName)
-			return *i;
+		if (key->name == strName)
+			return key;
 	}
 
 	// None :(
@@ -186,10 +232,10 @@ const CKey* CSettings::getKey(const CString& pStr) const
 	CString strName = pStr.toLower();
 
 	// Iterate key List
-	for (std::vector<CKey *>::const_iterator i = keys.begin(); i != keys.end(); ++i)
+	for (auto key : keys)
 	{
-		if ((*i)->name == strName)
-			return *i;
+		if (key->name == strName)
+			return key;
 	}
 
 	// None :(
@@ -201,7 +247,7 @@ bool CSettings::getBool(const CString& pStr, bool pDefault) const
 	std::lock_guard<std::recursive_mutex> lock(*m_preventChange);
 
 	const CKey *key = getKey(pStr);
-	return (key == 0 ? pDefault : (key->value == "true" || key->value == "1"));
+	return (key == nullptr ? pDefault : (key->value == "true" || key->value == "1"));
 }
 
 float CSettings::getFloat(const CString& pStr, float pDefault) const
@@ -209,7 +255,7 @@ float CSettings::getFloat(const CString& pStr, float pDefault) const
 	std::lock_guard<std::recursive_mutex> lock(*m_preventChange);
 
 	const CKey *key = getKey(pStr);
-	return (key == 0 ? pDefault : (float)strtofloat(key->value));
+	return (key == nullptr ? pDefault : (float)strtofloat(key->value));
 }
 
 int CSettings::getInt(const CString& pStr, int pDefault) const
@@ -217,7 +263,7 @@ int CSettings::getInt(const CString& pStr, int pDefault) const
 	std::lock_guard<std::recursive_mutex> lock(*m_preventChange);
 
 	const CKey *key = getKey(pStr);
-	return (key == 0 ? pDefault : strtoint(key->value));
+	return (key == nullptr ? pDefault : strtoint(key->value));
 }
 
 const CString CSettings::getStr(const CString& pStr, const CString& pDefault) const
@@ -225,7 +271,7 @@ const CString CSettings::getStr(const CString& pStr, const CString& pDefault) co
 	std::lock_guard<std::recursive_mutex> lock(*m_preventChange);
 
 	const CKey *key = getKey(pStr);
-	return (key == 0 ? pDefault : key->value);
+	return (key == nullptr ? pDefault : key->value);
 }
 
 const CString CSettings::operator[](int pIndex) const

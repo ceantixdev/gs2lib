@@ -116,19 +116,19 @@ bool CSettings::loadSettings(CString& settings, bool fromRC, bool save)
 	// Parse Data
 	settings.removeAllI("\r");
 	strList = settings.tokenize("\n", true);
-	for (auto & i : strList)
+	for (auto & str : strList)
 	{
 		// Strip out comments.
-		int comment_pos = i.find("#");
+		int comment_pos = str.find("#");
 		if (comment_pos == 0)
 			continue;
 
 		// Skip invalid or blank lines.
-		if (i.isEmpty() || i.find(strSep) == -1)
+		if ( str.isEmpty() || str.find(strSep) == -1)
 			continue;
 
 		// Tokenize Line && Trim && Lowercase Key Name
-		std::vector<CString> line = i.tokenize(strSep);
+		std::vector<CString> line = str.tokenize(strSep);
 		line[0].toLowerI();
 		if (line.size() == 1) continue;
 
@@ -222,16 +222,16 @@ bool CSettings::exists(const CString& pKey) const
 
 CKey* CSettings::addKey(const CString& pKey, const CString& pValue)
 {
-	CKey* k = getKey(pKey);
-	if (k)
+	CKey* key = getKey(pKey);
+	if (key)
 	{
-		k->value = pValue;
-		return k;
+		key->value = pValue;
+		return key;
 	}
 
-	k = new CKey(pKey, pValue);
-	keys.push_back(k);
-	return k;
+	key = new CKey(pKey, pValue);
+	keys.push_back(key);
+	return key;
 }
 
 /*

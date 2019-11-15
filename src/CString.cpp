@@ -344,7 +344,7 @@ CString CString::unescape() const
 	{
 		char cur = buffer[i];
 		char nex = buffer[++i];
-		
+
 		if (cur == '\\' && nex == '\\')
 			retVal << "\\";
 		else if (cur == '\"' && nex == '\"')
@@ -608,17 +608,31 @@ int CString::findl(char pChar) const
 	return (int)(loc - buffer);
 }
 
-std::vector<CString> CString::tokenize(const CString& pString) const
+std::vector<CString> CString::tokenize(const CString& pString, bool keepEmpty) const
 {
 	CString retVal(*this);
 	std::vector<CString> strList;
-	char *tok = strtok(retVal.text(), pString.text());
+	char *string = strdup(retVal.text());
+	char *tok;
 
-	while (tok != 0)
+	if (!keepEmpty)
 	{
-		strList.push_back(tok);
-		tok = strtok(0, pString.text());
+		tok = strtok(string, pString.text());
+		while ( tok != nullptr )
+		{
+			strList.emplace_back(tok);
+			tok = strtok(nullptr, pString.text());
+		}
 	}
+	else
+	{
+		while ( (tok = strsep(&string, pString.text())) != nullptr )
+		{
+			strList.emplace_back(tok);
+		}
+	}
+
+	free(string);
 
 	return strList;
 }
@@ -684,7 +698,7 @@ std::vector<CString> CString::loadToken(const CString& pFile, const CString& pTo
 	std::vector<CString> result;
 	while (fileData.bytesLeft())
 		result.push_back(fileData.readString(pToken));
-	
+
 	// return
 	return result;
 }

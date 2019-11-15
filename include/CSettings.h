@@ -50,6 +50,8 @@ class CSettings
 		// File-Loading Functions
 		bool isOpened() const;
 		bool loadFile(const CString& pStr);
+		bool loadSettings(CString &settings, bool fromRC = false, bool save = false);
+		CString getSettings();
 		bool saveFile();
 		void setSeparator(const CString& pSeparator);
 		void clear();

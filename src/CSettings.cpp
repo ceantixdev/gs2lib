@@ -25,7 +25,7 @@
 /*
 	Constructor - Deconstructor
 */
-CSettings::CSettings()
+CSettings::CSettings() : opened(false)
 {
 	m_preventChange = new std::recursive_mutex();
 }
@@ -59,15 +59,17 @@ void CSettings::setSeparator(const CString& pSeparator)
 	strSep = pSeparator;
 }
 
-bool CSettings::saveFile()
+CString CSettings::getSettings()
 {
+	std::lock_guard<std::recursive_mutex> lock(*m_preventChange);
+
 	CString options = CString();
 	options.clear();
-	std::vector<CString> oldOptions = CString::loadToken(filename, "\n", true);
+	std::vector<CString> oldOptions = strList;
 
 	for (auto & newOption : oldOptions)
 	{
-		if (newOption.find("#") != -1)
+		if (newOption.find("#") == 0)
 		{
 			options << newOption << "\n";
 			continue;
@@ -100,37 +102,26 @@ bool CSettings::saveFile()
 	}
 
 	options.replaceAllI("\n", "\r\n");
-	return options.save(filename);
+
+	return options;
 }
 
-bool CSettings::loadFile(const CString& pStr)
+bool CSettings::saveFile()
 {
-	std::lock_guard<std::recursive_mutex> lock(*m_preventChange);
+	return this->getSettings().save(filename);
+}
 
-	filename = pStr;
-
-	// definitions
-	CString fileData;
-
-	// Clear Keys
-	clear();
-
-	// Load File
-	if (!fileData.load(pStr))
-	{
-		opened = false;
-		return false;
-	}
-
+bool CSettings::loadSettings(CString& settings, bool fromRC, bool save)
+{
 	// Parse Data
-	fileData.removeAllI("\r");
-	strList = fileData.tokenize("\n");
+	settings.removeAllI("\r");
+	strList = settings.tokenize("\n", true);
 	for (auto & i : strList)
 	{
 		// Strip out comments.
 		int comment_pos = i.find("#");
-		if (comment_pos != -1)
-			i.removeI(comment_pos);
+		if (comment_pos == 0)
+			continue;
 
 		// Skip invalid or blank lines.
 		if (i.isEmpty() || i.find(strSep) == -1)
@@ -154,11 +145,51 @@ bool CSettings::loadFile(const CString& pStr)
 
 		// Create Key
 		CKey *key;
+
+		// Strip out comment from value
+		int comment_pos2 = line[1].find("#");
+		if (comment_pos2 != -1)
+			line[1].removeI(comment_pos);
+
 		if ((key = getKey(line[0])) == nullptr)
+		{
 			keys.push_back(new CKey(line[0], line[1]));
+		}
 		else
-			key->value << "," << line[1];
+		{
+			if (!fromRC)
+				key->value << "," << line[1];
+			else
+				key->value = line[1];
+		}
 	}
+
+	if (save)
+		this->saveFile();
+
+	return true;
+}
+
+bool CSettings::loadFile(const CString& pStr)
+{
+	std::lock_guard<std::recursive_mutex> lock(*m_preventChange);
+
+	filename = pStr;
+
+	// definitions
+	CString fileData;
+
+	// Clear Keys
+	clear();
+
+	// Load File
+	if (!fileData.load(pStr))
+	{
+		opened = false;
+		return false;
+	}
+
+	this->loadSettings(fileData);
 
 	opened = true;
 	return true;
@@ -221,7 +252,7 @@ CKey * CSettings::getKey(const CString& pStr)
 	}
 
 	// None :(
-	return 0;
+	return nullptr;
 }
 
 const CKey* CSettings::getKey(const CString& pStr) const
@@ -239,7 +270,7 @@ const CKey* CSettings::getKey(const CString& pStr) const
 	}
 
 	// None :(
-	return 0;
+	return nullptr;
 }
 
 bool CSettings::getBool(const CString& pStr, bool pDefault) const

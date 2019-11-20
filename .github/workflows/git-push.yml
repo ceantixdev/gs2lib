@@ -10,4 +10,4 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: test
-      run: echo $GITHUB_REF
+      run: git push origin $GITHUB_REF

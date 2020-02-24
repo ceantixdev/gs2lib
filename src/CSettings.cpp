@@ -22,17 +22,25 @@
 #include "IDebug.h"
 #include "CSettings.h"
 
+#ifndef __AMIGA__
+#define preventChangeMacro m_preventChange = new std::recursive_mutex();
+#define lockGuardMacro std::lock_guard<std::recursive_mutex> lock(*m_preventChange);
+#else
+#define preventChangeMacro
+#define lockGuardMacro
+#endif
 /*
 	Constructor - Deconstructor
 */
 CSettings::CSettings() : opened(false)
 {
-	m_preventChange = new std::recursive_mutex();
+	preventChangeMacro
 }
 
 CSettings::CSettings(const CString& pStr, const CString& pSeparator)
 {
-	m_preventChange = new std::recursive_mutex();
+
+	preventChangeMacro
 
 	strSep = pSeparator;
 	opened = loadFile(pStr);
@@ -41,7 +49,9 @@ CSettings::CSettings(const CString& pStr, const CString& pSeparator)
 CSettings::~CSettings()
 {
 	clear();
+#ifndef __AMIGA__
 	delete m_preventChange;
+#endif
 }
 
 /*
@@ -49,19 +59,19 @@ CSettings::~CSettings()
 */
 bool CSettings::isOpened() const
 {
-	std::lock_guard<std::recursive_mutex> lock(*m_preventChange);
+	lockGuardMacro
 	return opened;
 }
 
 void CSettings::setSeparator(const CString& pSeparator)
 {
-	std::lock_guard<std::recursive_mutex> lock(*m_preventChange);
+	lockGuardMacro
 	strSep = pSeparator;
 }
 
 CString CSettings::getSettings()
 {
-	std::lock_guard<std::recursive_mutex> lock(*m_preventChange);
+	lockGuardMacro
 
 	CString options = CString();
 	options.clear();
@@ -172,7 +182,7 @@ bool CSettings::loadSettings(CString& settings, bool fromRC, bool save)
 
 bool CSettings::loadFile(const CString& pStr)
 {
-	std::lock_guard<std::recursive_mutex> lock(*m_preventChange);
+	preventChangeMacro
 
 	filename = pStr;
 
@@ -197,7 +207,7 @@ bool CSettings::loadFile(const CString& pStr)
 
 void CSettings::clear()
 {
-	std::lock_guard<std::recursive_mutex> lock(*m_preventChange);
+	lockGuardMacro
 
 	// Clear Keys
 	for (auto & key : keys)
@@ -239,7 +249,7 @@ CKey* CSettings::addKey(const CString& pKey, const CString& pValue)
 */
 CKey * CSettings::getKey(const CString& pStr)
 {
-	std::lock_guard<std::recursive_mutex> lock(*m_preventChange);
+	lockGuardMacro
 
 	// Lowercase Name
 	CString strName = pStr.toLower();
@@ -257,7 +267,7 @@ CKey * CSettings::getKey(const CString& pStr)
 
 const CKey* CSettings::getKey(const CString& pStr) const
 {
-	std::lock_guard<std::recursive_mutex> lock(*m_preventChange);
+	lockGuardMacro
 
 	// Lowercase Name
 	CString strName = pStr.toLower();
@@ -275,7 +285,7 @@ const CKey* CSettings::getKey(const CString& pStr) const
 
 bool CSettings::getBool(const CString& pStr, bool pDefault) const
 {
-	std::lock_guard<std::recursive_mutex> lock(*m_preventChange);
+	lockGuardMacro
 
 	const CKey *key = getKey(pStr);
 	return (key == nullptr ? pDefault : (key->value == "true" || key->value == "1"));
@@ -283,7 +293,7 @@ bool CSettings::getBool(const CString& pStr, bool pDefault) const
 
 float CSettings::getFloat(const CString& pStr, float pDefault) const
 {
-	std::lock_guard<std::recursive_mutex> lock(*m_preventChange);
+	lockGuardMacro
 
 	const CKey *key = getKey(pStr);
 	return (key == nullptr ? pDefault : (float)strtofloat(key->value));
@@ -291,7 +301,7 @@ float CSettings::getFloat(const CString& pStr, float pDefault) const
 
 int CSettings::getInt(const CString& pStr, int pDefault) const
 {
-	std::lock_guard<std::recursive_mutex> lock(*m_preventChange);
+	lockGuardMacro
 
 	const CKey *key = getKey(pStr);
 	return (key == nullptr ? pDefault : strtoint(key->value));
@@ -299,7 +309,7 @@ int CSettings::getInt(const CString& pStr, int pDefault) const
 
 const CString CSettings::getStr(const CString& pStr, const CString& pDefault) const
 {
-	std::lock_guard<std::recursive_mutex> lock(*m_preventChange);
+	lockGuardMacro
 
 	const CKey *key = getKey(pStr);
 	return (key == nullptr ? pDefault : key->value);
@@ -307,13 +317,13 @@ const CString CSettings::getStr(const CString& pStr, const CString& pDefault) co
 
 const CString CSettings::operator[](int pIndex) const
 {
-	std::lock_guard<std::recursive_mutex> lock(*m_preventChange);
+	lockGuardMacro
 	return strList[pIndex].trim();
 }
 
 std::vector<CString> CSettings::getFile() const
 {
-	std::lock_guard<std::recursive_mutex> lock(*m_preventChange);
+	lockGuardMacro
 
 	std::vector<CString> newStrList;
 	std::copy(strList.begin(), strList.end(), newStrList.begin());

@@ -76,8 +76,9 @@ class CSettings
 		CString filename;
 		std::vector<CKey *> keys;
 		std::vector<CString> strList;
-
+#ifndef __AMIGA__
 		mutable std::recursive_mutex* m_preventChange;
+#endif
 };
 
 #endif // CSETTINGS_H

@@ -42,10 +42,11 @@
 static CString getBasePath();
 
 CLog::CLog()
-: enabled(false), file(0)
+: enabled(false), file(nullptr)
 {
-	m_write = new std::recursive_mutex();
-
+#ifndef __AMIGA__
+	m_write = new recursive_mutex();
+#endif
 	// Get base path.
 	homepath = getBasePath();
 }
@@ -53,50 +54,54 @@ CLog::CLog()
 CLog::CLog(const CString& _file, bool _enabled)
 : enabled(_enabled), filename(_file), file(0)
 {
-	m_write = new std::recursive_mutex();
-
+#ifndef __AMIGA__
+	m_write = new recursive_mutex();
+#endif
 	// Get base path.
 	homepath = getBasePath();
 
 	// Open the file now.
 	if (enabled)
 		file = fopen((homepath + filename).text(), "a");
-	if (0 == file)
+	if (nullptr == file)
 		enabled = false;
 }
 
 CLog::~CLog()
 {
 	{
-		std::lock_guard<std::recursive_mutex> lock(*m_write);
-
+#ifndef __AMIGA__
+		std::lock_guard<recursive_mutex> lock(*m_preventChange);
+#endif
 		if (file)
 		{
 			fflush(file);
 			fclose(file);
 		}
 	}
-
+#ifndef __AMIGA__
 	delete m_write;
+#endif
 }
 
 void CLog::out(const CString format, ...)
 {
 	va_list s_format_v;
 
-	std::lock_guard<std::recursive_mutex> lock(*m_write);
-
+#ifndef __AMIGA__
+	std::lock_guard<recursive_mutex> lock(*m_preventChange);
+#endif
 	// Assemble and print the timestamp.
 	char timestr[60];
-	time_t curtime = time(0);
-	strftime(timestr, sizeof(timestr), "%I:%M %p", localtime(&curtime));
+	time_t current_time = time(0);
+	strftime(timestr, sizeof(timestr), "%I:%M %p", localtime(&current_time));
 	printf("[%s] ", timestr);
 
 	// Log output to file.
-	if (true == enabled && 0 != file)
+	if ( enabled && nullptr != file)
 	{
 		// Save the timestamp to the file.
-		strftime(timestr, sizeof(timestr), "%a %b %d %X %Y", localtime(&curtime));
+		strftime(timestr, sizeof(timestr), "%a %b %d %X %Y", localtime(&current_time));
 		fprintf(file, "[%s] ", timestr);
 
 		// Write the message to the file.
@@ -117,10 +122,11 @@ void CLog::append(const CString format, ...)
 	va_list s_format_v;
 	va_start(s_format_v, format);
 
-	std::lock_guard<std::recursive_mutex> lock(*m_write);
-
+#ifndef __AMIGA__
+	std::lock_guard<recursive_mutex> lock(*m_preventChange);
+#endif
 	// Log output to file.
-	if (true == enabled && 0 != file)
+	if ( enabled && nullptr != file)
 	{
 		// Write the message to the file.
 		vfprintf(file, format.text(), s_format_v);
@@ -137,21 +143,22 @@ void CLog::append(const CString format, ...)
 
 void CLog::clear()
 {
-	std::lock_guard<std::recursive_mutex> lock(*m_write);
-
+#ifndef __AMIGA__
+	std::lock_guard<recursive_mutex> lock(*m_preventChange);
+#endif
 	if (file) fclose(file);
 
 	file = fopen((homepath + filename).text(), "w");
-	if (0 == file) enabled = false;
-	else enabled = true;
+	enabled = nullptr != file;
 }
 
 void CLog::close()
 {
-	std::lock_guard<std::recursive_mutex> lock(*m_write);
-
+#ifndef __AMIGA__
+	std::lock_guard<recursive_mutex> lock(*m_preventChange);
+#endif
 	if (file) fclose(file);
-	file = 0;
+	file = nullptr;
 	enabled = false;
 }
 
@@ -159,25 +166,25 @@ void CLog::close()
 
 void CLog::open()
 {
-	std::lock_guard<std::recursive_mutex> lock(*m_write);
-
+#ifndef __AMIGA__
+	std::lock_guard<recursive_mutex> lock(*m_preventChange);
+#endif
 	if (file) fclose(file);
 
 	file = fopen((homepath + filename).text(), "a");
-	if (0 == file) enabled = false;
-	else enabled = true;
+	enabled = nullptr != file;
 }
 
 void CLog::setFilename(const CString& filename)
 {
-	std::lock_guard<std::recursive_mutex> lock(*m_write);
-
+#ifndef __AMIGA__
+	std::lock_guard<recursive_mutex> lock(*m_preventChange);
+#endif
 	if (file) fclose(file);
 
 	this->filename = filename;
 	file = fopen((homepath + filename).text(), "a");
-	if (0 == file) enabled = false;
-	else enabled = true;
+	enabled = nullptr != file;
 }
 
 CString getBasePath()
@@ -200,14 +207,18 @@ CString getBasePath()
 	// Get the path to the program.
 	char path[ 260 ];
 	memset((void*)path, 0, 260);
+#ifdef __AMIGA__
+	snprintf(path, sizeof(path), "PROGDIR:");
+#else
 	readlink("/proc/self/exe", path, sizeof(path));
+#endif
 
 	// Assign the path to homepath.
 	char* end = strrchr(path, '/');
-	if (end != 0)
+	if (end != nullptr)
 	{
 		end++;
-		if (end != 0) *end = '\0';
+		if (end != nullptr) *end = '\0';
 		homepath = path;
 	}
 #endif

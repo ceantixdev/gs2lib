@@ -59,6 +59,7 @@ if(APPLE)
 	set(MACOSX_BUNDLE_SHORT_VERSION_STRING "${VER_FULL}")
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -std=gnu++17")
+	cmake_policy(SET CMP0042 NEW)
 elseif(WIN32)
 	# Visual C++ Compiler options
 	if(MSVC)
@@ -75,7 +76,7 @@ elseif(WIN32)
 		# Enable parallel compilation
 		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /MP")
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
-		
+
 		# Enable static linkage of the Microsoft Visual C/C++ Runtime
 		set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /MTd")
 		set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /MT")
@@ -104,6 +105,10 @@ elseif(WIN32)
 
 elseif(AROS)
 elseif(AMIGA)
+
+	add_definitions(-D_DEFAULT_SOURCE -D_POSIX_C_SOURCE=1)
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++17")
 else()
 	if(NOT NOSTATIC)
 	#	SET(CMAKE_EXE_LINKER_FLAGS "-static")
@@ -156,11 +161,11 @@ endif()
 set(
 	SOURCES
 	src/CCommon.cpp
-	src/CEncryption.cpp
-	src/CFileQueue.cpp
+	#src/CEncryption.cpp
+	#src/CFileQueue.cpp
 	src/CLog.cpp
 	src/CSettings.cpp
-	src/CSocket.cpp
+	#src/CSocket.cpp
 	src/CString.cpp
 	src/CTranslationManager.cpp
 	src/IUtil.cpp
@@ -170,11 +175,11 @@ set(
 set(
 	HEADERS
 	include/CCommon.h
-	include/CEncryption.h
-	include/CFileQueue.h
+	#include/CEncryption.h
+	#include/CFileQueue.h
 	include/CLog.h
 	include/CSettings.h
-	include/CSocket.h
+	#include/CSocket.h
 	include/CString.h
 	include/CTimeout.h
 	include/CTranslationManager.h
@@ -188,8 +193,12 @@ include_directories(
 	${PROJECT_SOURCE_DIR}/include
 )
 
+add_compile_definitions(__AMIGA__)
+
 if(NOT ZLIB_FOUND)
 	include_directories(${PROJECT_BINARY_DIR}/dependencies/zlib ${PROJECT_SOURCE_DIR}/dependencies/zlib)
+else()
+	include_directories(${ZLIB_INCLUDE_DIRS})
 endif()
 
 if(NOT BZip2_FOUND)

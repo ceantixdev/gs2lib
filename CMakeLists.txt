@@ -161,11 +161,8 @@ endif()
 set(
 	SOURCES
 	src/CCommon.cpp
-	#src/CEncryption.cpp
-	#src/CFileQueue.cpp
 	src/CLog.cpp
 	src/CSettings.cpp
-	#src/CSocket.cpp
 	src/CString.cpp
 	src/CTranslationManager.cpp
 	src/IUtil.cpp
@@ -175,11 +172,9 @@ set(
 set(
 	HEADERS
 	include/CCommon.h
-	#include/CEncryption.h
-	#include/CFileQueue.h
+
 	include/CLog.h
 	include/CSettings.h
-	#include/CSocket.h
 	include/CString.h
 	include/CTimeout.h
 	include/CTranslationManager.h
@@ -189,11 +184,25 @@ set(
 	include/md5.h
 )
 
+if(NOT NONET)
+	list(APPEND
+			SOURCES
+			src/CEncryption.cpp
+			src/CFileQueue.cpp
+			src/CSocket.cpp
+	)
+
+	list(APPEND
+			HEADERS
+			include/CEncryption.h
+			include/CFileQueue.h
+			include/CSocket.h
+			)
+endif()
+
 include_directories(
 	${PROJECT_SOURCE_DIR}/include
 )
-
-add_compile_definitions(__AMIGA__)
 
 if(NOT ZLIB_FOUND)
 	include_directories(${PROJECT_BINARY_DIR}/dependencies/zlib ${PROJECT_SOURCE_DIR}/dependencies/zlib)

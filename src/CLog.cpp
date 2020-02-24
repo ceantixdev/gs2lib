@@ -45,7 +45,7 @@ CLog::CLog()
 : enabled(false), file(nullptr)
 {
 #ifndef __AMIGA__
-	m_write = new recursive_mutex();
+	m_write = new std::recursive_mutex();
 #endif
 	// Get base path.
 	homepath = getBasePath();
@@ -55,7 +55,7 @@ CLog::CLog(const CString& _file, bool _enabled)
 : enabled(_enabled), filename(_file), file(0)
 {
 #ifndef __AMIGA__
-	m_write = new recursive_mutex();
+	m_write = new std::recursive_mutex();
 #endif
 	// Get base path.
 	homepath = getBasePath();
@@ -71,7 +71,7 @@ CLog::~CLog()
 {
 	{
 #ifndef __AMIGA__
-		std::lock_guard<recursive_mutex> lock(*m_preventChange);
+		std::lock_guard<std::recursive_mutex> lock(*m_write);
 #endif
 		if (file)
 		{
@@ -89,7 +89,7 @@ void CLog::out(const CString format, ...)
 	va_list s_format_v;
 
 #ifndef __AMIGA__
-	std::lock_guard<recursive_mutex> lock(*m_preventChange);
+	std::lock_guard<std::recursive_mutex> lock(*m_write);
 #endif
 	// Assemble and print the timestamp.
 	char timestr[60];
@@ -123,7 +123,7 @@ void CLog::append(const CString format, ...)
 	va_start(s_format_v, format);
 
 #ifndef __AMIGA__
-	std::lock_guard<recursive_mutex> lock(*m_preventChange);
+	std::lock_guard<std::recursive_mutex> lock(*m_write);
 #endif
 	// Log output to file.
 	if ( enabled && nullptr != file)
@@ -144,7 +144,7 @@ void CLog::append(const CString format, ...)
 void CLog::clear()
 {
 #ifndef __AMIGA__
-	std::lock_guard<recursive_mutex> lock(*m_preventChange);
+	std::lock_guard<std::recursive_mutex> lock(*m_write);
 #endif
 	if (file) fclose(file);
 
@@ -155,7 +155,7 @@ void CLog::clear()
 void CLog::close()
 {
 #ifndef __AMIGA__
-	std::lock_guard<recursive_mutex> lock(*m_preventChange);
+	std::lock_guard<std::recursive_mutex> lock(*m_write);
 #endif
 	if (file) fclose(file);
 	file = nullptr;
@@ -167,7 +167,7 @@ void CLog::close()
 void CLog::open()
 {
 #ifndef __AMIGA__
-	std::lock_guard<recursive_mutex> lock(*m_preventChange);
+	std::lock_guard<std::recursive_mutex> lock(*m_write);
 #endif
 	if (file) fclose(file);
 
@@ -178,7 +178,7 @@ void CLog::open()
 void CLog::setFilename(const CString& filename)
 {
 #ifndef __AMIGA__
-	std::lock_guard<recursive_mutex> lock(*m_preventChange);
+	std::lock_guard<std::recursive_mutex> lock(*m_write);
 #endif
 	if (file) fclose(file);
 

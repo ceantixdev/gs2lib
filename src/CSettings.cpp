@@ -95,9 +95,12 @@ CString CSettings::getSettings()
 		name.trimI();
 
 		CKey *option = this->getKey(name);
-		newOption = CString() << name << " = " << option->value;
 
-		option->saved = true;
+		newOption = CString() << name << " = ";
+		if (option) {
+			newOption << option->value;
+			option->saved = true;
+		}
 
 		// Add this line back into options.
 		options << newOption << "\n";

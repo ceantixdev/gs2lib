@@ -88,7 +88,7 @@ class CString
 		CString readChars(int pLength);
 		CString readString(const CString& pString = " ");
 		int read(char *pDest, int pSize);
-		int write(const char *pSrc, int pSize);
+		int write(const char *pSrc, int pSize, bool nullTerminate = true);
 		int write(const CString& pString);
 		void clear(int pCount = 10);
 
@@ -168,9 +168,9 @@ class CString
 		CString& operator<<(const short pData);
 		CString& operator<<(const int pData);
 
-		CString& writeChar(const char pData);
-		CString& writeShort(const short pData);
-		CString& writeInt(const int pData);
+		CString& writeChar(const char pData, bool nullTerminate = true);
+		CString& writeShort(const short pData, bool nullTerminate = true);
+		CString& writeInt(const int pData, bool nullTerminate = true);
 		char readChar();
 		short readShort();
 		int readInt();

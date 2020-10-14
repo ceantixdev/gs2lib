@@ -615,7 +615,7 @@ std::vector<CString> CString::tokenize(const CString& pString, bool keepEmpty) c
 	std::vector<CString> strList;
 	char *string = strdup(retVal.text());
 	char *tok;
-#if !defined(__AMIGA__)
+#if !defined(WIN32)
 	if (!keepEmpty)
 	{
 #endif
@@ -626,7 +626,7 @@ std::vector<CString> CString::tokenize(const CString& pString, bool keepEmpty) c
 			strList.emplace_back(tok);
 			tok = strtok(nullptr, pString.text());
 		}
-#if !defined(__AMIGA__)
+#if !defined(WIN32)
 	}
 	else
 	{

@@ -25,18 +25,6 @@
 #include "zlib.h"
 
 #if defined(_WIN32) || defined(_WIN64)
-	extern "C" {
-		char * strsep(char **sp, const char *sep)
-		{
-			char *p, *s;
-			if (sp == nullptr || *sp == nullptr || **sp == '\0') return(nullptr);
-			s = *sp;
-			p = s + strcspn(s, sep);
-			if (*p != '\0') *p++ = '\0';
-			*sp = p;
-			return(s);
-		}
-	}
 	#ifdef _MSC_VER
 		#define strncasecmp _strnicmp
 	#endif
@@ -627,15 +615,18 @@ std::vector<CString> CString::tokenize(const CString& pString, bool keepEmpty) c
 	std::vector<CString> strList;
 	char *string = strdup(retVal.text());
 	char *tok;
-
+#if !defined(WIN32)
 	if (!keepEmpty)
 	{
+#endif
+
 		tok = strtok(string, pString.text());
 		while ( tok != nullptr )
 		{
 			strList.emplace_back(tok);
 			tok = strtok(nullptr, pString.text());
 		}
+#if !defined(WIN32)
 	}
 	else
 	{
@@ -644,6 +635,7 @@ std::vector<CString> CString::tokenize(const CString& pString, bool keepEmpty) c
 			strList.emplace_back(tok);
 		}
 	}
+#endif
 
 	free(string);
 

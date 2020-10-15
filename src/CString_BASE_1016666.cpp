@@ -25,18 +25,6 @@
 #include "zlib.h"
 
 #if defined(_WIN32) || defined(_WIN64)
-	extern "C" {
-		char * strsep(char **sp, const char *sep)
-		{
-			char *p, *s;
-			if (sp == nullptr || *sp == nullptr || **sp == '\0') return(nullptr);
-			s = *sp;
-			p = s + strcspn(s, sep);
-			if (*p != '\0') *p++ = '\0';
-			*sp = p;
-			return(s);
-		}
-	}
 	#ifdef _MSC_VER
 		#define strncasecmp _strnicmp
 	#endif
@@ -290,7 +278,7 @@ int CString::read(char *pDest, int pSize)
 	return length;
 }
 
-int CString::write(const char *pSrc, int pSize, bool nullTerminate)
+int CString::write(const char *pSrc, int pSize)
 {
 	if (!pSize)
 		return 0;
@@ -305,8 +293,7 @@ int CString::write(const char *pSrc, int pSize, bool nullTerminate)
 
 	memcpy(&buffer[writec], pSrc, pSize);
 	writec += pSize;
-	if (nullTerminate)
-		buffer[writec] = 0;
+	buffer[writec] = 0;
 	sizec = (writec > sizec ? writec : sizec);
 	//buffer[sizec] = 0;
 	return pSize;
@@ -627,15 +614,18 @@ std::vector<CString> CString::tokenize(const CString& pString, bool keepEmpty) c
 	std::vector<CString> strList;
 	char *string = strdup(retVal.text());
 	char *tok;
-
+#if !defined(__AMIGA__)
 	if (!keepEmpty)
 	{
+#endif
+
 		tok = strtok(string, pString.text());
 		while ( tok != nullptr )
 		{
 			strList.emplace_back(tok);
 			tok = strtok(nullptr, pString.text());
 		}
+#if !defined(__AMIGA__)
 	}
 	else
 	{
@@ -644,6 +634,7 @@ std::vector<CString> CString::tokenize(const CString& pString, bool keepEmpty) c
 			strList.emplace_back(tok);
 		}
 	}
+#endif
 
 	free(string);
 
@@ -1154,29 +1145,29 @@ CString operator+(const CString& pString1, const CString& pString2)
 /*
 	Additional Functions for Data-Packing
 */
-CString& CString::writeChar(const char pData, bool nullTerminate)
+CString& CString::writeChar(const char pData)
 {
-	write((char*)&pData, 1, nullTerminate);
+	write((char*)&pData, 1);
 	return *this;
 }
 
-CString& CString::writeShort(const short pData, bool nullTerminate)
+CString& CString::writeShort(const short pData)
 {
 	char val[2];
 	val[0] = ((pData >> 8) & 0xFF);
 	val[1] = (pData & 0xFF);
-	write((char*)&val, 2, nullTerminate);
+	write((char*)&val, 2);
 	return *this;
 }
 
-CString& CString::writeInt(const int pData, bool nullTerminate)
+CString& CString::writeInt(const int pData)
 {
 	char val[4];
 	val[0] = ((pData >> 24) & 0xFF);
 	val[1] = ((pData >> 16) & 0xFF);
 	val[2] = ((pData >> 8) & 0xFF);
 	val[3] = (pData & 0xFF);
-	write((char *)&val, 4, nullTerminate);
+	write((char *)&val, 4);
 	return *this;
 }
 

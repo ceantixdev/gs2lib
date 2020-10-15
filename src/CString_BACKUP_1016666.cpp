@@ -627,7 +627,11 @@ std::vector<CString> CString::tokenize(const CString& pString, bool keepEmpty) c
 	std::vector<CString> strList;
 	char *string = strdup(retVal.text());
 	char *tok;
+<<<<<<< HEAD
+#if !defined(WIN32)
+=======
 
+>>>>>>> 3168ceb... Fix CString
 	if (!keepEmpty)
 	{
 		tok = strtok(string, pString.text());
@@ -636,6 +640,10 @@ std::vector<CString> CString::tokenize(const CString& pString, bool keepEmpty) c
 			strList.emplace_back(tok);
 			tok = strtok(nullptr, pString.text());
 		}
+<<<<<<< HEAD
+#if !defined(WIN32)
+=======
+>>>>>>> 3168ceb... Fix CString
 	}
 	else
 	{

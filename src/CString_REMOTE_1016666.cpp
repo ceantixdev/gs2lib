@@ -290,7 +290,7 @@ int CString::read(char *pDest, int pSize)
 	return length;
 }
 
-int CString::write(const char *pSrc, int pSize, bool nullTerminate)
+int CString::write(const char *pSrc, int pSize)
 {
 	if (!pSize)
 		return 0;
@@ -305,8 +305,7 @@ int CString::write(const char *pSrc, int pSize, bool nullTerminate)
 
 	memcpy(&buffer[writec], pSrc, pSize);
 	writec += pSize;
-	if (nullTerminate)
-		buffer[writec] = 0;
+	buffer[writec] = 0;
 	sizec = (writec > sizec ? writec : sizec);
 	//buffer[sizec] = 0;
 	return pSize;
@@ -1154,29 +1153,29 @@ CString operator+(const CString& pString1, const CString& pString2)
 /*
 	Additional Functions for Data-Packing
 */
-CString& CString::writeChar(const char pData, bool nullTerminate)
+CString& CString::writeChar(const char pData)
 {
-	write((char*)&pData, 1, nullTerminate);
+	write((char*)&pData, 1);
 	return *this;
 }
 
-CString& CString::writeShort(const short pData, bool nullTerminate)
+CString& CString::writeShort(const short pData)
 {
 	char val[2];
 	val[0] = ((pData >> 8) & 0xFF);
 	val[1] = (pData & 0xFF);
-	write((char*)&val, 2, nullTerminate);
+	write((char*)&val, 2);
 	return *this;
 }
 
-CString& CString::writeInt(const int pData, bool nullTerminate)
+CString& CString::writeInt(const int pData)
 {
 	char val[4];
 	val[0] = ((pData >> 24) & 0xFF);
 	val[1] = ((pData >> 16) & 0xFF);
 	val[2] = ((pData >> 8) & 0xFF);
 	val[3] = (pData & 0xFF);
-	write((char *)&val, 4, nullTerminate);
+	write((char *)&val, 4);
 	return *this;
 }
 

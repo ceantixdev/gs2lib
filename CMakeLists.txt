@@ -204,6 +204,11 @@ include_directories(
 	${PROJECT_SOURCE_DIR}/include
 )
 
+set(GS2LIB_INCLUDE_DIRECTORY
+		"${PROJECT_SOURCE_DIR}/include"
+		"${PROJECT_BINARY_DIR}/include"
+		PARENT_SCOPE)
+
 if(NOT ZLIB_FOUND)
 	include_directories(${PROJECT_BINARY_DIR}/dependencies/zlib ${PROJECT_SOURCE_DIR}/dependencies/zlib)
 else()
@@ -242,3 +247,4 @@ if(WIN32)
 	target_link_libraries(${TARGET_NAME} ws2_32 wsock32 iphlpapi)
 endif()
 
+set(GS2LIB_LOADED ON PARENT_SCOPE)

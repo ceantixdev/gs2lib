@@ -26,15 +26,25 @@
 
 #if defined(_WIN32) || defined(_WIN64)
 	extern "C" {
-		char * strsep(char **sp, const char *sep)
+		char * strsep (char **stringp, const char *delim)
 		{
-			char *p, *s;
-			if (sp == nullptr || *sp == nullptr || **sp == '\0') return(nullptr);
-			s = *sp;
-			p = s + strcspn(s, sep);
-			if (*p != '\0') *p++ = '\0';
-			*sp = p;
-			return(s);
+			char *begin, *end;
+			begin = *stringp;
+			if (begin == NULL)
+				return NULL;
+
+			/* Find the end of the token.  */
+			end = begin + strcspn (begin, delim);
+			if (*end)
+			{
+				/* Terminate the token and set *STRINGP past NUL character.  */
+				*end++ = '\0';
+				*stringp = end;
+			}
+			else
+				/* No more delimiters; this is the last token.  */
+				*stringp = NULL;
+			return begin;
 		}
 	}
 	#ifdef _MSC_VER

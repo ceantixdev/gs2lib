@@ -19,22 +19,9 @@
 #  along with GS2Emu.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-set(
-    SOURCES
-    blocksort.c
-    bz2compress.c
-    randtable.c
-    huffman.c
-    crctable.c
-    decompress.c
-    bzlib.c
-)
+file(GLOB SOURCES src/*.c)
 
-set(
-    HEADERS
-    bzlib.h
-    bzlib_private.h
-)
+file(GLOB HEADERS src/*.h)
 
 set(TARGET_NAME "bzip2")
 
@@ -45,12 +32,6 @@ if(APPLE)
     set_property(
         TARGET ${TARGET_NAME} APPEND_STRING PROPERTY COMPILE_FLAGS "-fobjc-arc"
     )
-elseif(WIN32)
-    add_library(${TARGET_NAME} ${SOURCES} ${HEADERS})
-elseif(AROS)
-    add_library(${TARGET_NAME} ${SOURCES} ${HEADERS})
-elseif(AMIGA)
-    add_library(${TARGET_NAME} ${SOURCES} ${HEADERS})
 else()
     add_library(${TARGET_NAME} ${SOURCES} ${HEADERS})
 endif()

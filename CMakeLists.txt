@@ -216,7 +216,7 @@ else()
 endif()
 
 if(NOT BZip2_FOUND)
-	include_directories(${PROJECT_SOURCE_DIR}/dependencies/bzip2)
+	include_directories(${PROJECT_SOURCE_DIR}/dependencies/bzip2/src)
 endif()
 
 # Set target names for the libraries

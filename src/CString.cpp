@@ -205,7 +205,7 @@ bool CString::load(const CString& pString)
 		return false;
 #else
 	// Linux uses UTF-8 filenames.
-	if ((file = fopen(pString.text(), "rb")) == 0)
+	if ((file = fopen(pString.text(), "rb")) == nullptr)
 		return false;
 #endif
 
@@ -707,6 +707,18 @@ std::vector<CString> CString::tokenizeConsole() const
 	}
 	strList.push_back(str);
 	return strList;
+}
+
+CString CString::join(std::vector<CString>& rows, const CString& pToken)
+{
+	CString join = CString();
+
+	for (auto& row : rows) {
+		join << row << pToken;
+		row.clear(0);
+	}
+
+	return join;
 }
 
 std::vector<CString> CString::loadToken(const CString& pFile, const CString& pToken, bool removeCR)

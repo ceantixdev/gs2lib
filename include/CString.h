@@ -115,6 +115,7 @@ class CString
 		std::vector<CString> tokenize(const CString& pString = " ", bool keepEmpty = false) const;
 		std::vector<CString> tokenizeConsole() const;
 		static std::vector<CString> loadToken(const CString& pFile, const CString& pToken = "\n", bool removeCR = false);
+		static CString join(std::vector<CString>& rows, const CString& pToken = "\n");
 		CString replaceAll(const CString& pString, const CString& pNewString) const;
 		CString gtokenize() const;
 		CString guntokenize() const;

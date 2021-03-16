@@ -509,6 +509,56 @@ CString CString::trimRight() const
 	return CString(*this);
 }
 
+CString CString::encodesimple(unsigned int buffSize) const
+{
+	CString retVal;
+	char* buf = new char[buffSize];
+	memset((void*)buf, 0, buffSize);
+	int error = 0;
+	unsigned int clen = buffSize;
+
+	int i = 0;
+
+	do
+	{
+		buf[i] = ~(((buffer[i] + (char)i >> 6) & 0x03) + (char)(clen + 0xa) + (char)((buffer[i] + (char)i) * (char)0x04));
+
+		i++;
+	} while ((int)i != (int)clen);
+
+	retVal.write(buf, clen);
+	delete [] buf;
+	return retVal;
+}
+
+CString CString::decodesimple(unsigned int buffSize, bool includeNullTermination) const
+{
+	CString retVal;
+	char* buf = new char[buffSize];
+	memset((void*)buf, 0, buffSize);
+	int error = 0;
+	unsigned int clen = buffSize;
+
+	int i = 0;
+	int c = 0;
+
+	do
+	{
+		char key = (-0x0a - clen) + ~buffer[i];
+		char soln = (((int)(key & 0xfc) >> 2) + (key * (char)'@' & 0xff)) - i;
+		if (soln != 0x00 || includeNullTermination)
+		{
+			buf[c] = soln;
+			c++;
+		}
+		i++;
+	} while (i != clen);
+
+	retVal.write(buf, clen);
+	delete [] buf;
+	return retVal;
+}
+
 CString CString::bzcompress(unsigned int buffSize) const
 {
 	CString retVal;
@@ -1366,6 +1416,18 @@ CString getExtension(const CString& pStr)
 	if (pos >= 0)
 		return pStr.subString(pos);
 	return CString();
+}
+
+CString& CString::encodesimpleI(unsigned int buffSize)
+{
+	*this = encodesimple(buffSize);
+	return *this;
+}
+
+CString& CString::decodesimpleI(unsigned int buffSize, bool includeNullTermination)
+{
+	*this = decodesimple(buffSize, includeNullTermination);
+	return *this;
 }
 
 CString& CString::bzcompressI(unsigned int buffSize)

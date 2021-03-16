@@ -105,10 +105,14 @@ class CString
 		CString trim() const;
 		CString trimLeft() const;
 		CString trimRight() const;
+
+		CString decodesimple(unsigned int buffSize = 65536, bool includeNullTermination = false) const;
+		CString encodesimple(unsigned int buffSize = 65536) const;
 		CString bzcompress(unsigned int buffSize = 65536) const;
 		CString bzuncompress(unsigned int buffSize = 65536) const;
 		CString zcompress(unsigned int buffSize = 65536) const;
 		CString zuncompress(unsigned int buffSize = 65536) const;
+
 		int find(const CString& pString, int pStart = 0) const;
 		int findi(const CString& pString, int pStart = 0) const;
 		int findl(char pChar) const;
@@ -135,10 +139,14 @@ class CString
 		inline CString& toLowerI();
 		inline CString& toUpperI();
 		inline CString& trimI();
+
+		CString& encodesimpleI(unsigned int buffSize = 65536);
+		CString& decodesimpleI(unsigned int buffSize = 65536, bool includeNullTermination = false);
 		CString& bzcompressI(unsigned int buffSize = 65536);
 		CString& bzuncompressI(unsigned int buffSize = 65536);
 		CString& zcompressI(unsigned int buffSize = 65536);
 		CString& zuncompressI(unsigned int buffSize = 65536);
+
 		inline CString& replaceAllI(const CString& pString, const CString& pNewString);
 		inline CString& gtokenizeI();
 		inline CString& guntokenizeI();

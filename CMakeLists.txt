@@ -309,9 +309,7 @@ file(GLOB GS2LIB_INCLUDES
 	"include/*.h"
 )
 
-install(TARGETS ${TARGET_NAME} DESTINATION "lib/")
-
-install(FILES ${TARGET_NAME} DESTINATION "include/")
+install(FILES ${GS2LIB_INCLUDES} DESTINATION "include/")
 
 
 set(GS2LIB_LOADED ON PARENT_SCOPE)

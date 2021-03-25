@@ -47,9 +47,7 @@ def buildStep(dockerImage, generator, os, defines) {
 			properties([pipelineTriggers([githubPush()])])
 			def commondir = env.WORKSPACE + '/../' + fixed_job_name + '/'
 
-			docker.image("${dockerImage}").inside("-u 0:0 -e BUILDER_UID=1001 -e BUILDER_GID=1001 -e BUILDER_USER=gserver -e BUILDER_GROUP=gserver") {
-				sh "sudo apt update"
-				sh "sudo apt install -y gcc-multilib"
+			docker.image("${dockerImage}").inside("-u 1000:1000") {
 
 				checkout scm
 
@@ -58,7 +56,7 @@ def buildStep(dockerImage, generator, os, defines) {
 				}
 
 				if (!env.CHANGE_ID) {
-			
+
 				}
 
 				sh "mkdir -p build/"

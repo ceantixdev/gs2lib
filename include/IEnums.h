@@ -252,7 +252,7 @@ enum
 	PLO_UNKNOWN107				= 107,	// Basically PLO_LEVELBOARD for extra level layers.
 	PLO_UNKNOWN109				= 109,	// Valid message in 6.037. -Codr
 	PLO_UNKNOWN111				= 111,	// Valid message in 6.037. -Codr
-	PLO_UNKNOWN124				= 124,	// 5/26/2019: RC3 receives this, only hint I seen was regarding receiving player flags? Didn't try to test it though 
+	PLO_UNKNOWN124				= 124,	// 5/26/2019: RC3 receives this, only hint I seen was regarding receiving player flags? Didn't try to test it though
 	PLO_NPCBYTECODE				= 131,	// Compiled Torque-script for an NPC. {131}{INT3 id}{code}
 	PLO_UNKNOWN132				= 132,	// Valid message in 5.07.  The code it uses is unique.  Unhandled by 6.037. -Codr
 	PLO_UNKNOWN133				= 133,	// Valid message in 5.07.  The code it uses is unique.  Unhandled by 6.037. -Codr
@@ -313,7 +313,9 @@ enum
 enum
 {
 	PLFLAG_NOMASSMESSAGE	= 0x01,
+	PLFLAG_ONLYSHOWONELEVEL	= 0x02,
 	PLFLAG_NOTOALL			= 0x04,
+	PLFLAG_VOICEDISABLED	= 0x08
 };
 
 enum

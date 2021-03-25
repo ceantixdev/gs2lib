@@ -3,7 +3,7 @@
 	{
 	  "DockerImage":	"desertbit/crossbuild:linux-x86",
 	  "Generator":		"Unix Makefiles",
-	  "OS":				"Linux x86_64",
+	  "OS":				"Linux x86",
 	  "Defines":		""
 	},
 	{
@@ -16,6 +16,12 @@
 	  "DockerImage":	"desertbit/crossbuild:linux-armv7",
 	  "Generator":		"Unix Makefiles",
 	  "OS":				"Linux RasPi",
+	  "Defines":		""
+	},
+	{
+	  "DockerImage":	"dockcross/windows-static-x86:latest",
+	  "Generator":		"Unix Makefiles",
+	  "OS":				"Windows x86",
 	  "Defines":		""
 	},
 	{

@@ -74,7 +74,7 @@ def buildStep(dockerImage, generator, os, defines) {
 					archiveArtifacts(artifacts: '*.zip,*.tar.gz,*.tgz');
 				}
 
-				discordSend description: "", footer: "", link: env.BUILD_URL, result: currentBuild.currentResult, title: "[${split_job_name[0]}] Build ${fixed_job_name} #${env.BUILD_NUMBER} Target: ${os} DockerImage: ${dockerImage} Generator: ${generator} successful!", webhookURL: env.GS2EMU_WEBHOOK
+				discordSend description: "", footer: "", link: env.BUILD_URL, result: currentBuild.currentResult, title: "[${split_job_name[0]}] Build ${fixed_job_name} #${env.BUILD_NUMBER} Target: ${os} successful!", webhookURL: env.GS2EMU_WEBHOOK
 			}
 		}
 	} catch(err) {

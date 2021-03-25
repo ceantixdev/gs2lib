@@ -48,6 +48,19 @@ string(TOLOWER ${PROJECT_NAME} PROJECT_NAME_LOWER)
 # Additional CMake modules
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 
+# Version number in format X.YY.ZZ
+set(VER_X 1)
+set(VER_Y 0)
+set(VER_Z 0)
+set(VER_EXTRA "-beta" CACHE STRING "Extra version")
+
+set(VER_FULL "${VER_X}.${VER_Y}.${VER_Z}${VER_EXTRA}")
+
+set(GSERVER_CREDITS "Joey, Nalin, Codr and Cadavre")
+
+STRING(REGEX REPLACE " " "-" VER_CPACK ${VER_FULL})
+
+
 if(APPLE)
 	# Set variables for generating the Info.plist file
 	set(MACOSX_BUNDLE_BUNDLE_VERSION "${VER_FULL}")
@@ -150,7 +163,7 @@ endif()
 find_package(BZip2)
 if(NOT BZip2_FOUND)
 	message("Bzip2 not found in system. Compiling it ourselves.")
-	add_subdirectory(${PROJECT_SOURCE_DIR}/dependencies/bzip2)
+	add_subdirectory(${PROJECT_SOURCE_DIR}/dependencies/bzip2 EXCLUDE_FROM_ALL)
 endif()
 
 # Restore library suffixes
@@ -236,7 +249,7 @@ else()
 	set(WOLFSSL_CRYPT_TESTS no)
 	set(WOLFSSL_EXAMPLES no)
 	target_compile_definitions(${PROJECT_NAME} PUBLIC WOLFSSL_ENABLED)
-	add_subdirectory("dependencies/wolfssl")
+	add_subdirectory("dependencies/wolfssl" EXCLUDE_FROM_ALL)
 	add_dependencies(${PROJECT_NAME} wolfssl)
 	target_link_libraries(${PROJECT_NAME} wolfssl)
 endif()
@@ -263,5 +276,55 @@ target_link_libraries(${TARGET_NAME} ${CMAKE_THREAD_LIBS_INIT})
 if(WIN32)
 	target_link_libraries(${TARGET_NAME} ws2_32 wsock32 iphlpapi)
 endif()
+
+# Packaging
+if(APPLE)
+	set(CPACK_GENERATOR DragNDrop)
+	set(CPACK_DMG_VOLUME_NAME "${PROJECT_NAME} ${VER_FULL}")
+	set(
+			CPACK_DMG_DS_STORE_SETUP_SCRIPT
+			${PROJECT_SOURCE_DIR}/resources/packaging/osx/DMGSetup.scpt
+	)
+	set(
+			CPACK_DMG_BACKGROUND_IMAGE
+			${PROJECT_SOURCE_DIR}/resources/packaging/osx/DMGBackground.tif
+	)
+elseif(WIN32)
+	set(CPACK_GENERATOR "ZIP")
+elseif(AMIGA)
+	set(CPACK_GENERATOR LHA)
+else()
+	set(CPACK_GENERATOR TGZ)
+endif()
+
+set(CPACK_PACKAGE_NAME ${PROJECT_NAME_LOWER})
+set(CPACK_PACKAGE_VENDOR "OpenGraal Team")
+set(CPACK_PACKAGE_CONTACT "graal.in")
+set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${VER_CPACK}")
+set(CPACK_PACKAGE_VERSION_MAJOR ${VER_X})
+set(CPACK_PACKAGE_VERSION_MINOR ${VER_Y})
+set(CPACK_PACKAGE_VERSION_PATCH ${VER_Z}${VER_EXTRA})
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "GS2Lib")
+set(CPACK_PACKAGE_DESCRIPTION_FILE ${PROJECT_SOURCE_DIR}/README.md)
+set(CPACK_RESOURCE_FILE_README ${PROJECT_SOURCE_DIR}/README.md)
+set(CPACK_RESOURCE_FILE_LICENSE ${PROJECT_SOURCE_DIR}/LICENSE.md)
+set(CPACK_SOURCE_GENERATOR TGZ)
+set(CPACK_SOURCE_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${VER_CPACK}-src")
+set(CPACK_SOURCE_IGNORE_FILES "/build/;/.bzr/;~$;${CPACK_SOURCE_IGNORE_FILES}")
+
+if(NOT CPack_CMake_INCLUDED)
+	include(CPack)
+endif()
+
+# Install the library
+install(TARGETS ${TARGET_NAME}
+		DESTINATION ${CMAKE_INSTALL_LIBDIR}
+		EXPORT "${TARGET_NAME}-targets"
+		LIBRARY)
+
+# Install the headers
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
+		DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/
+		FILES_MATCHING PATTERN "*.h")
 
 set(GS2LIB_LOADED ON PARENT_SCOPE)

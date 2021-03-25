@@ -509,6 +509,50 @@ CString CString::trimRight() const
 	return CString(*this);
 }
 
+#if defined(WOLFSSL_ENABLED)
+
+CString CString::rc4_encrypt(const char * key, int keylen) const
+{
+	CString retVal;
+	byte* buf = new byte[length()];
+	memset((void*)buf, 0, length());
+	int error = 0;
+	unsigned int clen = length();
+
+	Arc4* enc = new Arc4();
+
+	wc_Arc4SetKey(enc, reinterpret_cast<const byte *>(key), keylen);
+	wc_Arc4Process(enc, buf, reinterpret_cast<const byte *>(buffer), clen);
+
+	wc_Arc4Free(enc);
+
+	retVal.write((const char*)buf, clen);
+	delete [] buf;
+	return retVal;
+}
+
+CString CString::rc4_decrypt(const char * key, int keylen) const
+{
+	CString retVal;
+	byte* buf = new byte[length()];
+	memset((void*)buf, 0, length());
+	int error = 0;
+	unsigned int clen = length();
+
+	Arc4* dec = new Arc4();
+
+	wc_Arc4SetKey(dec, reinterpret_cast<const byte *>(key), keylen);
+	wc_Arc4Process(dec, buf, reinterpret_cast<const byte *>(buffer), clen);
+
+	wc_Arc4Free(dec);
+
+	retVal.write((const char*)buf, clen);
+	delete [] buf;
+	return retVal;
+}
+
+#endif
+
 CString CString::encodesimple(unsigned int buffSize) const
 {
 	CString retVal;
@@ -1417,6 +1461,20 @@ CString getExtension(const CString& pStr)
 		return pStr.subString(pos);
 	return CString();
 }
+
+#if defined(WOLFSSL_ENABLED)
+CString& CString::rc4_encryptI(const char * key, int keylen)
+{
+	*this = rc4_encrypt(key, keylen);
+	return *this;
+}
+
+CString& CString::rc4_decryptI(const char * key, int keylen)
+{
+	*this = rc4_decrypt(key, keylen);
+	return *this;
+}
+#endif
 
 CString& CString::encodesimpleI(unsigned int buffSize)
 {

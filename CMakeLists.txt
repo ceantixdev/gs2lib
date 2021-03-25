@@ -224,6 +224,23 @@ set(TARGET_NAME ${PROJECT_NAME})
 
 add_library(${TARGET_NAME} ${SOURCES} ${HEADERS})
 
+option(NOWOLFSSL "Don't compile WolfSSL." OFF)
+if(NOWOLFSSL)
+	message("Don't compile WolfSSL.")
+else()
+	message("Compile as static runtime.")
+	set(WOLFSSL_ARC4 yes)
+	set(WOLFSSL_RSA yes)
+	set(WOLFSSL_DES3 yes)
+
+	set(WOLFSSL_CRYPT_TESTS no)
+	set(WOLFSSL_EXAMPLES no)
+	target_compile_definitions(${PROJECT_NAME} PUBLIC WOLFSSL_ENABLED)
+	add_subdirectory("dependencies/wolfssl")
+	add_dependencies(${PROJECT_NAME} wolfssl)
+	target_link_libraries(${PROJECT_NAME} wolfssl)
+endif()
+
 if(NOT ZLIB_FOUND AND NOT NOSTATIC)
 	add_dependencies(${TARGET_NAME} zlibstatic)
 	target_link_libraries(${TARGET_NAME} zlibstatic)

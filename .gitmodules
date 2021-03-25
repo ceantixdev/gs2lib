@@ -7,3 +7,6 @@
 [submodule "dependencies/bzip2/src"]
 	path = dependencies/bzip2/src
 	url = git://sourceware.org/git/bzip2.git
+[submodule "dependencies/wolfssl"]
+	path = dependencies/wolfssl
+	url = https://github.com/wolfSSL/wolfssl

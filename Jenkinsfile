@@ -28,7 +28,7 @@ def killall_jobs() {
 
 		echo("Kill task = ${build}");
 
-		killnums += "#" + build.getNumber().toInteger() + ", "
+		killnums += "#" + build.getNumber().toInteger() + ", ";
 
 		build.doStop();
 	}
@@ -36,13 +36,14 @@ def killall_jobs() {
 	if (killnums != "") {
 		discordSend description: "in favor of #${buildnum}, ignore following failed builds for ${killnums}", footer: "", link: env.BUILD_URL, result: "ABORTED", title: "[${split_job_name[0]}] Killing task(s) ${fixed_job_name} ${killnums}", webhookURL: env.GS2EMU_WEBHOOK
 	}
-	echo "Done killing"
+	echo("Done killing");
 }
 
 def buildStep(dockerImage, generator, os, defines) {
 	def split_job_name = env.JOB_NAME.split(/\/{1}/);
 	def fixed_job_name = split_job_name[1].replace('%2F',' ');
     def fixed_os = os.replace(' ','-');
+
 	try{
 		stage("Building on \"${dockerImage}\" with \"${generator}\" for \"${os}\"...") {
 			properties([pipelineTriggers([githubPush()])]);
@@ -60,20 +61,17 @@ def buildStep(dockerImage, generator, os, defines) {
 
 				}
 
-				echo("mkdir build");
 				sh("mkdir -p build/");
-				echo("mkdir lib");
 				sh("mkdir -p lib/");
-				echo("rm -rfv build/*");
 				sh("rm -rfv build/*");
 
 				discordSend description: "", footer: "", link: env.BUILD_URL, result: currentBuild.currentResult, title: "[${split_job_name[0]}] Starting ${os} build target...", webhookURL: env.GS2EMU_WEBHOOK
 
 				dir("build") {
-					sh "cmake -G\"${generator}\" ${defines} -DVER_EXTRA=\"-${fixed_os}-${fixed_job_name}\" .. || true" // Temporary fix for Windows MingW builds
-					sh "cmake --build . --config Release --target package -- -j 8"
+					sh("cmake -G\"${generator}\" ${defines} -DVER_EXTRA=\"-${fixed_os}-${fixed_job_name}\" .. || true"); // Temporary fix for Windows MingW builds
+					sh("cmake --build . --config Release --target package -- -j `nproc`");
 
-					archiveArtifacts artifacts: '*.zip,*.tar.gz,*.tgz'
+					archiveArtifacts(artifacts: '*.zip,*.tar.gz,*.tgz');
 				}
 
 				discordSend description: "", footer: "", link: env.BUILD_URL, result: currentBuild.currentResult, title: "[${split_job_name[0]}] Build ${fixed_job_name} #${env.BUILD_NUMBER} Target: ${os} DockerImage: ${dockerImage} Generator: ${generator} successful!", webhookURL: env.GS2EMU_WEBHOOK
@@ -91,51 +89,31 @@ node('master') {
 	killall_jobs();
 	def split_job_name = env.JOB_NAME.split(/\/{1}/);
 	def fixed_job_name = split_job_name[1].replace('%2F',' ');
-	checkout scm;
+	checkout(scm);
 
     withCredentials([usernamePassword(credentialsId: 'githubgraal2', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
-        sh("git push https://${GIT_USERNAME}:${GIT_PASSWORD}@bitbucket.org/xtjoeytx/gs2lib.git HEAD:${fixed_job_name}")
+        sh("git push https://${GIT_USERNAME}:${GIT_PASSWORD}@bitbucket.org/xtjoeytx/gs2lib.git HEAD:${fixed_job_name}");
     }
 
 	env.COMMIT_MSG = sh (
 		script: 'git log -1 --pretty=%B ${GIT_COMMIT}',
 		returnStdout: true
-	).trim()
+	).trim();
 
 	discordSend description: "${env.COMMIT_MSG}", footer: "", link: env.BUILD_URL, result: currentBuild.currentResult, title: "[${split_job_name[0]}] Build Started: ${fixed_job_name} #${env.BUILD_NUMBER}", webhookURL: env.GS2EMU_WEBHOOK
 
-	sh "rm -rf ./*"
+	sh("rm -rf ./*");
 
-	parallel (
-		//'Win64-NoMySQL': {
-		//	node {
-		//		buildStep('dockcross/windows-static-x64:latest', 'Unix Makefiles', 'Windows x86_64 NoMySQL', "-DNOMYSQL=TRUE")
-		//	}
-		//},
-		//'Win64': {
-		//	node {
-		//		buildStep('dockcross/windows-static-x64:latest', 'Unix Makefiles', 'Windows x86_64', "-DNOMYSQL=FALSE")
-		//	}
-		//},
-		//'Linux x86_64-NoMySQL': {
-		//	node {
-		//		buildStep('desertbit/crossbuild:linux-x86_64', 'Unix Makefiles', 'Linux x86_64 NoMySQL', "-DNOMYSQL=TRUE")
-		//	}
-		//},
-		'Linux x86_64': {
+	def branches = [:];
+	def project = readJSON file: "JenkinsEnv.json";
+
+	project.builds.each { v ->
+		branches["Build ${v.DockerRoot}/${v.DockerImage}:${v.DockerTag}"] = {
 			node {
-				buildStep('desertbit/crossbuild:linux-x86_64', 'Unix Makefiles', 'Linux x86_64', "-DNOMYSQL=FALSE")
-			}
-		},
-		//'Linux ARMv7-NoMySQL': {
-		//	node {
-		//		buildStep('desertbit/crossbuild:linux-armv7', 'Unix Makefiles', 'Linux RasPi NoMySQL', '-DNOMYSQL=TRUE')
-		//	}
-		//},
-		'Linux ARMv7': {
-			node {
-				buildStep('desertbit/crossbuild:linux-armv7', 'Unix Makefiles', 'Linux RasPi', '-DNOMYSQL=FALSE')
+				buildStep(v.DockerImage, v.Generator, v.OS, v.Defines);
 			}
 		}
-    )
+	}
+
+	parallel(branches);
 }

@@ -58,8 +58,7 @@ def buildStep(dockerImage, generator, os, defines) {
 				}
 
 				if (!env.CHANGE_ID) {
-					sh "rm -rfv publishing/deploy/gs2lib"
-					sh "mkdir -p publishing/deploy/gs2lib"
+			
 				}
 
 				sh "mkdir -p build/"

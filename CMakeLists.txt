@@ -48,6 +48,19 @@ string(TOLOWER ${PROJECT_NAME} PROJECT_NAME_LOWER)
 # Additional CMake modules
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 
+# Version number in format X.YY.ZZ
+set(VER_X 1)
+set(VER_Y 0)
+set(VER_Z 0)
+set(VER_EXTRA "-beta" CACHE STRING "Extra version")
+
+set(VER_FULL "${VER_X}.${VER_Y}.${VER_Z}${VER_EXTRA}")
+
+set(GSERVER_CREDITS "Joey, Nalin, Codr and Cadavre")
+
+STRING(REGEX REPLACE " " "-" VER_CPACK ${VER_FULL})
+
+
 if(APPLE)
 	# Set variables for generating the Info.plist file
 	set(MACOSX_BUNDLE_BUNDLE_VERSION "${VER_FULL}")
@@ -150,7 +163,7 @@ endif()
 find_package(BZip2)
 if(NOT BZip2_FOUND)
 	message("Bzip2 not found in system. Compiling it ourselves.")
-	add_subdirectory(${PROJECT_SOURCE_DIR}/dependencies/bzip2)
+	add_subdirectory(${PROJECT_SOURCE_DIR}/dependencies/bzip2 EXCLUDE_FROM_ALL)
 endif()
 
 # Restore library suffixes
@@ -236,7 +249,7 @@ else()
 	set(WOLFSSL_CRYPT_TESTS no)
 	set(WOLFSSL_EXAMPLES no)
 	target_compile_definitions(${PROJECT_NAME} PUBLIC WOLFSSL_ENABLED)
-	add_subdirectory("dependencies/wolfssl")
+	add_subdirectory("dependencies/wolfssl" EXCLUDE_FROM_ALL)
 	add_dependencies(${PROJECT_NAME} wolfssl)
 	target_link_libraries(${PROJECT_NAME} wolfssl)
 endif()
@@ -303,13 +316,15 @@ if(NOT CPack_CMake_INCLUDED)
 	include(CPack)
 endif()
 
-install(TARGETS ${TARGET_NAME} DESTINATION "lib/")
+# Install the library
+install(TARGETS ${TARGET_NAME}
+		DESTINATION ${CMAKE_INSTALL_LIBDIR}
+		EXPORT "${TARGET_NAME}-targets"
+		LIBRARY)
 
-file(GLOB GS2LIB_INCLUDES
-	"include/*.h"
-)
-
-install(FILES ${GS2LIB_INCLUDES} DESTINATION "include/")
-
+# Install the headers
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
+		DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/include
+		FILES_MATCHING PATTERN "*.h")
 
 set(GS2LIB_LOADED ON PARENT_SCOPE)

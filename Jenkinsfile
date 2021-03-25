@@ -102,7 +102,7 @@ node('master') {
 
 	discordSend description: "${env.COMMIT_MSG}", footer: "", link: env.BUILD_URL, result: currentBuild.currentResult, title: "[${split_job_name[0]}] Build Started: ${fixed_job_name} #${env.BUILD_NUMBER}", webhookURL: env.GS2EMU_WEBHOOK
 
-	sh("rm -rf ./*");
+
 
 	def branches = [:];
 	def project = readJSON file: "JenkinsEnv.json";
@@ -114,6 +114,8 @@ node('master') {
 			}
 		}
 	}
+
+	sh("rm -rf ./*");
 
 	parallel(branches);
 }

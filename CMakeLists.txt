@@ -197,6 +197,7 @@ set(
 	include/md5.h
 )
 
+option(NET "Compile with networking support." ON)
 if(NET)
 	list(APPEND
 			SOURCES

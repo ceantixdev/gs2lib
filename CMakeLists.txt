@@ -123,7 +123,7 @@ elseif(AMIGA)
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++17")
 else()
-	if(NOT NOSTATIC)
+	if(STATIC)
 	#	SET(CMAKE_EXE_LINKER_FLAGS "-static")
 	endif()
 
@@ -133,8 +133,8 @@ else()
 
 endif()
 
-option(NOSTATIC "Don't compile as a static runtime." OFF)
-if(NOSTATIC)
+option(STATIC "Compile as a static runtime." ON)
+if(NOT STATIC)
 	message("Don't compile as a static runtime.")
 	set(BUILD_SHARED_LIBS TRUE CACHE BOOL "-" FORCE)
 else()
@@ -144,7 +144,7 @@ else()
 endif()
 
 # Prefer static linkage
-if(NOT NOSTATIC)
+if(STATIC)
 	set(SUFFIXES_ORIG ${CMAKE_FIND_LIBRARY_SUFFIXES})
 	set(CMAKE_FIND_LIBRARY_SUFFIXES .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
 endif()
@@ -153,7 +153,7 @@ find_package(ZLIB)
 if(NOT ZLIB_FOUND)
 	message("Zlib not found in system. Compiling it ourselves.")
 	add_subdirectory(${PROJECT_SOURCE_DIR}/dependencies/zlib EXCLUDE_FROM_ALL)
-	if(NOSTATIC)
+	if(STATIC)
 		set_target_properties(zlibstatic minigzip example PROPERTIES EXCLUDE_FROM_ALL 1 EXCLUDE_FROM_DEFAULT_BUILD 1)
 	else()
 		set_target_properties(zlib minigzip example PROPERTIES EXCLUDE_FROM_ALL 1 EXCLUDE_FROM_DEFAULT_BUILD 1)
@@ -167,7 +167,7 @@ if(NOT BZip2_FOUND)
 endif()
 
 # Restore library suffixes
-if(NOT NOSTATIC)
+if(STATIC)
 	set(CMAKE_FIND_LIBRARY_SUFFIXES ${SUFFIXES_ORIG})
 endif()
 
@@ -197,7 +197,7 @@ set(
 	include/md5.h
 )
 
-if(NOT NONET)
+if(NET)
 	list(APPEND
 			SOURCES
 			src/CEncryption.cpp
@@ -237,11 +237,11 @@ set(TARGET_NAME ${PROJECT_NAME})
 
 add_library(${TARGET_NAME} ${SOURCES} ${HEADERS})
 
-option(NOWOLFSSL "Don't compile WolfSSL." OFF)
-if(NOWOLFSSL)
+option(WOLFSSL "Compile with WolfSSL support." OFF)
+if(NOT WOLFSSL)
 	message("Don't compile WolfSSL.")
 else()
-	message("Compile as static runtime.")
+	message("Compile as WolfSSL.")
 	set(WOLFSSL_ARC4 yes)
 	set(WOLFSSL_RSA yes)
 	set(WOLFSSL_DES3 yes)
@@ -254,10 +254,10 @@ else()
 	target_link_libraries(${PROJECT_NAME} wolfssl)
 endif()
 
-if(NOT ZLIB_FOUND AND NOT NOSTATIC)
+if(NOT ZLIB_FOUND AND STATIC)
 	add_dependencies(${TARGET_NAME} zlibstatic)
 	target_link_libraries(${TARGET_NAME} zlibstatic)
-elseif(NOT ZLIB_FOUND AND NOSTATIC)
+elseif(NOT ZLIB_FOUND AND NOT STATIC)
 	add_dependencies(${TARGET_NAME} zlib)
 	target_link_libraries(${TARGET_NAME} zlib)
 else()

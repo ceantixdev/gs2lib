@@ -38,6 +38,8 @@ c:\mingw\bin\../lib/gcc/mingw32/4.6.2/include/c++/cstdio:166:11: erreur: '::snpr
 #include <vector>
 #if defined(WOLFSSL_ENABLED)
 #include <wolfssl/wolfcrypt/arc4.h>
+#include <wolfssl/ssl.h>
+#include <wolfssl/internal.h>
 #endif
 /*
 #include "bzlib.h"
@@ -110,11 +112,14 @@ class CString
 		CString trimRight() const;
 
 #if defined(WOLFSSL_ENABLED)
+		CString sha1() const;
 		CString rc4_encrypt(const char * key, int keylen) const;
 		CString rc4_decrypt(const char * key, int keylen) const;
 #endif
 		CString decodesimple(unsigned int buffSize = 65536, bool includeNullTermination = false) const;
 		CString encodesimple(unsigned int buffSize = 65536) const;
+		CString base64encode() const;
+		CString base64decode() const;
 		CString bzcompress(unsigned int buffSize = 65536) const;
 		CString bzuncompress(unsigned int buffSize = 65536) const;
 		CString zcompress(unsigned int buffSize = 65536) const;
@@ -153,6 +158,7 @@ class CString
 #endif
 		CString& encodesimpleI(unsigned int buffSize = 65536);
 		CString& decodesimpleI(unsigned int buffSize = 65536, bool includeNullTermination = false);
+		CString& base64decodeI();
 		CString& bzcompressI(unsigned int buffSize = 65536);
 		CString& bzuncompressI(unsigned int buffSize = 65536);
 		CString& zcompressI(unsigned int buffSize = 65536);

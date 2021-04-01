@@ -510,6 +510,19 @@ CString CString::trimRight() const
 }
 
 #if defined(WOLFSSL_ENABLED)
+CString CString::sha1() const
+{
+	//byte shaSum[SHA_DIGEST_SIZE];
+	unsigned char hash[SHA_DIGEST_LENGTH];
+
+	CString retVal;
+
+	SHA1(reinterpret_cast<const unsigned char *>(buffer), length() - 1, hash);
+
+	retVal = (const char*)hash;
+
+	return retVal;
+}
 
 CString CString::rc4_encrypt(const char * key, int keylen) const
 {
@@ -600,6 +613,47 @@ CString CString::decodesimple(unsigned int buffSize, bool includeNullTermination
 
 	retVal.write(buf, clen);
 	delete [] buf;
+	return retVal;
+}
+
+CString CString::base64encode() const
+{
+	CString retVal = CString("");
+
+	int val = 0, valb = -6;
+	for (int c = 0; c < length(); c++) {
+		val = (val << 8) + buffer[c];
+		valb += 8;
+		while (valb >= 0) {
+			retVal << "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"[(val>>valb)&0x3F];
+			valb -= 6;
+		}
+	}
+	if (valb>-6) retVal << "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"[((val<<8)>>(valb+8))&0x3F];
+	while (retVal.length()%4) retVal <<'=';
+
+	return retVal;
+}
+
+CString CString::base64decode() const
+{
+	int in_len = length();
+
+	CString retVal = CString("");
+	std::vector<int> T(256,-1);
+	for (int i=0; i<64; i++) T["ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"[i]] = i;
+
+	int val=0, valb=-8;
+	for (int c = 0; c < in_len; c++) {
+		if (T[buffer[c]] == -1) break;
+		val = (val << 6) + T[buffer[c]];
+		valb += 6;
+		if (valb >= 0) {
+			retVal << char((val>>valb)&0xFF);
+			valb -= 8;
+		}
+	}
+
 	return retVal;
 }
 
@@ -1485,6 +1539,12 @@ CString& CString::encodesimpleI(unsigned int buffSize)
 CString& CString::decodesimpleI(unsigned int buffSize, bool includeNullTermination)
 {
 	*this = decodesimple(buffSize, includeNullTermination);
+	return *this;
+}
+
+CString& CString::base64decodeI()
+{
+	*this = base64decode();
 	return *this;
 }
 

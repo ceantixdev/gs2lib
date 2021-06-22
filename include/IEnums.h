@@ -150,7 +150,7 @@ enum
 
 	PLI_UNKNOWN157				= 157,	// Something to do with ganis.
 	PLI_UPDATESCRIPT			= 158,	// {158}{script} Requests a script from the server.
-	PLI_UNKNOWN159UPDATEPACKAGE				= 159,	// {159]{(char)order?]{packagefilename}{modtime}
+	PLI_UPDATEPACKAGEREQUESTFILE				= 159,	// {159]{(char)order?]{packagefilename}{modtime}
 	PLI_RC_FOLDERDELETE			= 160,
 	PLI_UPDATECLASS				= 161,	// {161}{INT5 modtime}{name} Class request.
 	PLI_RC_UNKNOWN162			= 162	// Blank packet, sent by RC3 beta.
@@ -248,8 +248,8 @@ enum
 	PLO_FILE					= 102,
 	PLO_RC_MAXUPLOADFILESIZE	= 103,	// {GINT5} - Upload file size limit in bytes. Default to 20 mebibytes
 	PLO_UNKNOWN104				= 104,	// Valid message in 5.07 and 6.037.  The code it uses is unique. -Codr
-	PLO_UNKNOWN105UPDATEPACKAGE				= 105,	// Valid message in 5.07 and 6.037.  The code it uses is unique. -Codr
-	PLO_UNKNOWN106UPDATEPACKAGE				= 106,	// Valid message in 5.07 and 6.037.  The code it uses is unique. -Codr
+	PLO_UPDATEPACKAGESIZE				= 105,	// Valid message in 5.07 and 6.037.  The code it uses is unique. -Codr
+	PLO_UPDATEPACKAGEDONE				= 106,	// Valid message in 5.07 and 6.037.  The code it uses is unique. -Codr
 	PLO_UNKNOWN107				= 107,	// Basically PLO_LEVELBOARD for extra level layers.
 	PLO_UNKNOWN109				= 109,	// Valid message in 6.037. -Codr
 	PLO_UNKNOWN111				= 111,	// Valid message in 6.037. -Codr

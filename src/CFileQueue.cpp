@@ -20,6 +20,7 @@
 */
 
 #include <queue>
+#include <IUtil.h>
 #include "IDebug.h"
 #include "IEnums.h"
 #include "CFileQueue.h"
@@ -157,6 +158,8 @@ void CFileQueue::sendCompress()
 		case ENCRYPT_GEN_1:
 		{
 			oBuffer << pSend;
+			if (sock->webSocket)
+				webSocketFixOutgoingPacket(oBuffer);
 			unsigned int dsize = oBuffer.length();
 			oBuffer.removeI(0, sock->sendData(oBuffer.text(), &dsize));
 			break;

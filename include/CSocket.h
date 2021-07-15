@@ -40,7 +40,9 @@
 #define SOCKET_STATE_TERMINATING		4
 
 #define SOCKET_OK						0
-#define SOCKET_INVALID					1
+#ifndef SOCKET_INVALID
+	#define SOCKET_INVALID				1
+#endif
 #define SOCKET_HOST_UNKNOWN				2
 #define SOCKET_BIND_ERROR				3
 #define SOCKET_CONNECT_ERROR			4
@@ -291,6 +293,8 @@ class CSocket
 		//! Destroys the socket subsystems.
 		/*! Windows specific. */
 		static void socketSystemDestroy();
+
+		bool webSocket;
 };
 
 inline

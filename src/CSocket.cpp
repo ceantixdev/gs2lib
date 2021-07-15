@@ -259,13 +259,14 @@ void CSocketManager::cleanup(bool callOnUnregister)
 int CSocket::was_initiated = 0;
 
 // Class functions
-CSocket::CSocket()
+CSocket::CSocket() : webSocket(false)
 {
 	if (CSocket::was_initiated == 0) CSocket::socketSystemInit();
 	memset((char *)&properties.description, 0, SOCKET_MAX_DESCRIPTION);
 }
 
-CSocket::CSocket(const char* host, const char* port, sock_properties* properties)
+CSocket::CSocket(const char* host, const char* port, sock_properties* properties) : webSocket(false)
+
 {
 	if (CSocket::was_initiated == 0) CSocket::socketSystemInit();
 	if (properties != 0)
@@ -375,7 +376,7 @@ int CSocket::connect()
 		// Let us reuse the address.  Freaking bind.
 		int value = 1;
 		setsockopt(properties.handle, SOL_SOCKET, SO_REUSEADDR, (char*)&value, sizeof(value));
-		
+
 		// Bind the socket.
 		if (::bind(properties.handle, (struct sockaddr *)&properties.address, properties.addresslen) == SOCKET_ERROR)
 		{
@@ -953,7 +954,7 @@ const char* errorMessage(int error)
 			//	__gnu_cxx::snprintf(buf, 32, "%d", error);
 			//#else
 				snprintf(buf, 32, "%d", error);
-			//#endif 
+			//#endif
 			return buf;
 		}
 	}

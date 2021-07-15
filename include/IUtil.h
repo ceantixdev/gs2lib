@@ -236,5 +236,7 @@ int getRCVersionID(const CString& version);
 signed char getColor(const CString& color);
 CString removeComments(const CString& code, const CString& newLine = "\n");
 CString removeExtension(const CString& file);
+int webSocketFixOutgoingPacket( CString& packetData );
+int webSocketFixIncomingPacket( CString& packetData );
 
 #endif

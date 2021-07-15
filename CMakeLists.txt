@@ -19,7 +19,7 @@
 #  along with GS2Emu.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-cmake_minimum_required(VERSION 2.8.5)
+cmake_minimum_required(VERSION 3.0.0)
 
 project(gs2lib CXX)
 
@@ -246,6 +246,7 @@ else()
 	set(WOLFSSL_ARC4 yes)
 	set(WOLFSSL_RSA yes)
 	set(WOLFSSL_DES3 yes)
+	set(WOLFSSL_HARDEN yes)
 
 	set(WOLFSSL_CRYPT_TESTS no)
 	set(WOLFSSL_EXAMPLES no)

@@ -52,6 +52,11 @@
 	#endif
 #endif
 
+#if defined(WOLFSSL_ENABLED)
+	#include <wolfssl/wolfcrypt/hash.h>
+	#include <wolfssl/wolfcrypt/arc4.h>
+#endif
+
 /*
 	Constructor ~ Deconstructor
 */
@@ -300,6 +305,29 @@ int CString::read(char *pDest, int pSize)
 	return length;
 }
 
+int CString::write(unsigned char *pSrc, int pSize, bool nullTerminate)
+{
+	if (!pSize)
+		return 0;
+	if (buffer == 0)
+		clear(pSize);
+
+	if (writec + pSize >= buffc)
+	{
+		buffc = writec + pSize + 10 + (sizec / 3);
+		buffer = (char*)realloc(buffer, buffc);
+	}
+
+	memcpy(&buffer[writec], pSrc, pSize);
+	writec += pSize;
+	if (nullTerminate)
+		buffer[writec] = 0;
+	sizec = (writec > sizec ? writec : sizec);
+	//buffer[sizec] = 0;
+	return pSize;
+}
+
+
 int CString::write(const char *pSrc, int pSize, bool nullTerminate)
 {
 	if (!pSize)
@@ -512,14 +540,17 @@ CString CString::trimRight() const
 #if defined(WOLFSSL_ENABLED)
 CString CString::sha1() const
 {
-	//byte shaSum[SHA_DIGEST_SIZE];
-	unsigned char hash[SHA_DIGEST_LENGTH];
-
 	CString retVal;
 
-	SHA1(reinterpret_cast<const unsigned char *>(buffer), length() - 1, hash);
+	int hash_len = wc_HashGetDigestSize(WC_HASH_TYPE_SHA);
 
-	retVal = (const char*)hash;
+	byte *hash = new byte[hash_len];
+	memset((void*)hash, 0, hash_len);
+
+	wc_Hash(WC_HASH_TYPE_SHA, reinterpret_cast<const byte *>(text()), length(), hash, hash_len);
+
+	retVal.write(hash, hash_len);
+	delete [] hash;
 
 	return retVal;
 }
@@ -620,17 +651,45 @@ CString CString::base64encode() const
 {
 	CString retVal = CString("");
 
-	int val = 0, valb = -6;
-	for (int c = 0; c < length(); c++) {
-		val = (val << 8) + buffer[c];
-		valb += 8;
-		while (valb >= 0) {
-			retVal << "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"[(val>>valb)&0x3F];
-			valb -= 6;
-		}
+	static constexpr char sEncodingTable[] = {
+			'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
+			'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
+			'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
+			'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
+			'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
+			'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+			'w', 'x', 'y', 'z', '0', '1', '2', '3',
+			'4', '5', '6', '7', '8', '9', '+', '/'
+	};
+
+	size_t in_len = length();
+	size_t out_len = 4 * ((in_len + 2) / 3);
+	std::string ret(out_len, '\0');
+	size_t i;
+	char *p = const_cast<char*>(ret.c_str());
+
+	for (i = 0; i < in_len - 2; i += 3) {
+		*p++ = sEncodingTable[(buffer[i] >> 2) & 0x3F];
+		*p++ = sEncodingTable[((buffer[i] & 0x3) << 4) | ((int) (buffer[i + 1] & 0xF0) >> 4)];
+		*p++ = sEncodingTable[((buffer[i + 1] & 0xF) << 2) | ((int) (buffer[i + 2] & 0xC0) >> 6)];
+		*p++ = sEncodingTable[buffer[i + 2] & 0x3F];
 	}
-	if (valb>-6) retVal << "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"[((val<<8)>>(valb+8))&0x3F];
-	while (retVal.length()%4) retVal <<'=';
+	if (i < in_len) {
+		*p++ = sEncodingTable[(buffer[i] >> 2) & 0x3F];
+		if (i == (in_len - 1)) {
+			*p++ = sEncodingTable[((buffer[i] & 0x3) << 4)];
+			*p++ = '=';
+		}
+		else {
+			*p++ = sEncodingTable[((buffer[i] & 0x3) << 4) | ((int) (buffer[i + 1] & 0xF0) >> 4)];
+			*p++ = sEncodingTable[((buffer[i + 1] & 0xF) << 2)];
+		}
+		*p++ = '=';
+	}
+
+	retVal.write(ret.c_str());
+
+	ret.clear();
 
 	return retVal;
 }
@@ -640,19 +699,51 @@ CString CString::base64decode() const
 	int in_len = length();
 
 	CString retVal = CString("");
-	std::vector<int> T(256,-1);
-	for (int i=0; i<64; i++) T["ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"[i]] = i;
 
-	int val=0, valb=-8;
-	for (int c = 0; c < in_len; c++) {
-		if (T[buffer[c]] == -1) break;
-		val = (val << 6) + T[buffer[c]];
-		valb += 6;
-		if (valb >= 0) {
-			retVal << char((val>>valb)&0xFF);
-			valb -= 8;
-		}
+	static constexpr unsigned char kDecodingTable[] = {
+			64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+			64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+			64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 62, 64, 64, 64, 63,
+			52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 64, 64, 64, 64, 64, 64,
+			64,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14,
+			15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 64, 64, 64, 64, 64,
+			64, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
+			41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 64, 64, 64, 64, 64,
+			64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+			64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+			64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+			64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+			64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+			64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+			64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+			64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64
+	};
+
+	//size_t in_len = input.size();
+	if (in_len % 4 != 0) return *this;//"Input data size is not a multiple of 4";
+
+	size_t out_len = in_len / 4 * 3;
+	std::string out(out_len, '\0');
+	if (buffer[in_len - 1] == '=') out_len--;
+	if (buffer[in_len - 2] == '=') out_len--;
+
+	out.resize(out_len);
+
+	for (size_t i = 0, j = 0; i < in_len;) {
+		uint32_t a = buffer[i] == '=' ? 0 & i++ : kDecodingTable[static_cast<int>(buffer[i++])];
+		uint32_t b = buffer[i] == '=' ? 0 & i++ : kDecodingTable[static_cast<int>(buffer[i++])];
+		uint32_t c = buffer[i] == '=' ? 0 & i++ : kDecodingTable[static_cast<int>(buffer[i++])];
+		uint32_t d = buffer[i] == '=' ? 0 & i++ : kDecodingTable[static_cast<int>(buffer[i++])];
+
+		uint32_t triple = (a << 3 * 6) + (b << 2 * 6) + (c << 1 * 6) + (d << 0 * 6);
+
+		if (j < out_len) out[j++] = (triple >> 2 * 8) & 0xFF;
+		if (j < out_len) out[j++] = (triple >> 1 * 8) & 0xFF;
+		if (j < out_len) out[j++] = (triple >> 0 * 8) & 0xFF;
 	}
+
+	retVal.write(out.c_str(), out.length());
+	out.clear();
 
 	return retVal;
 }
@@ -1517,6 +1608,12 @@ CString getExtension(const CString& pStr)
 }
 
 #if defined(WOLFSSL_ENABLED)
+CString& CString::sha1I()
+{
+	*this = sha1();
+	return *this;
+}
+
 CString& CString::rc4_encryptI(const char * key, int keylen)
 {
 	*this = rc4_encrypt(key, keylen);
@@ -1539,6 +1636,12 @@ CString& CString::encodesimpleI(unsigned int buffSize)
 CString& CString::decodesimpleI(unsigned int buffSize, bool includeNullTermination)
 {
 	*this = decodesimple(buffSize, includeNullTermination);
+	return *this;
+}
+
+CString& CString::base64encodeI()
+{
+	*this = base64encode();
 	return *this;
 }
 

@@ -343,3 +343,156 @@ CString removeExtension(const CString& file)
 
 	return file.subString(0, ePos);
 }
+
+
+int webSocketFixOutgoingPacket( CString& packetData ) {
+	auto *message = new unsigned char[65535 * sizeof( char )];
+	int i;
+	int data_start_index;
+
+	message[0] = 130;
+
+	if( packetData.length() <= 125 ) {
+		message[1] = ( unsigned char )packetData.length();
+		data_start_index = 2;
+	} else if( packetData.length() > 125 && packetData.length() <= 65535 ) {
+		message[1] = 126;
+		message[2] = ( unsigned char )( ( (int64_t)packetData.length() >> 8 ) & 255 );
+		message[3] = ( unsigned char )( ( (int64_t)packetData.length() ) & 255 );
+		data_start_index = 4;
+	} else {
+		message[1] = 127;
+		message[2] = ( unsigned char )( ( (int64_t)packetData.length() >> 56 ) & 255 );
+		message[3] = ( unsigned char )( ( (int64_t)packetData.length() >> 48 ) & 255 );
+		message[4] = ( unsigned char )( ( (int64_t)packetData.length() >> 40 ) & 255 );
+		message[5] = ( unsigned char )( ( (int64_t)packetData.length() >> 32 ) & 255 );
+		message[6] = ( unsigned char )( ( (int64_t)packetData.length() >> 24 ) & 255 );
+		message[7] = ( unsigned char )( ( (int64_t)packetData.length() >> 16 ) & 255 );
+		message[8] = ( unsigned char )( ( (int64_t)packetData.length() >> 8 ) & 255 );
+		message[9] = ( unsigned char )( ( (int64_t)packetData.length() ) & 255 );
+		data_start_index = 10;
+	}
+
+	for( i = 0; i < packetData.length(); i++ ) {
+		message[ data_start_index + i ] = ( unsigned char )packetData.text()[i];
+	}
+
+	int newPacketLength = packetData.length() + data_start_index;
+
+	packetData.clear();
+	packetData.write(message, newPacketLength);
+
+	delete [] message;
+
+	return i;
+}
+
+/**
+ * @brief Frame FIN.
+ */
+	#define WS_FIN      128
+
+/**
+ * @brief Frame FIN shift
+ */
+	#define WS_FIN_SHIFT  7
+
+/**
+ * @brief Continuation frame.
+ */
+	#define WS_FR_OP_CONT 0
+
+/**
+ * @brief Text frame.
+ */
+	#define WS_FR_OP_TXT  1
+
+/**
+ * @brief Binary frame.
+ */
+	#define WS_FR_OP_BIN  2
+
+/**
+ * @brief Close frame.
+ */
+	#define WS_FR_OP_CLSE 8
+
+/**
+ * @brief Ping frame.
+ */
+	#define WS_FR_OP_PING 0x9
+
+/**
+ * @brief Pong frame.
+ */
+	#define WS_FR_OP_PONG 0xA
+
+/**
+ * @brief Unsupported frame.
+ */
+	#define WS_FR_OP_UNSUPPORTED 0xF
+
+int webSocketFixIncomingPacket( CString& packetData ) {
+	unsigned int i, j;
+	unsigned char mask[4];
+	unsigned int packet_length = 0;
+	unsigned int length_code = 0;
+
+	volatile auto code = packetData.readChar();
+	volatile auto is_fin = (code & 0xFF) >> WS_FIN_SHIFT;
+	volatile auto opcode = (code & 0xF);
+
+	if( opcode != WS_FR_OP_BIN ) {
+		//dst = NULL;
+		if( code == 136 ) {
+			/* WebSocket client disconnected */
+			return -2;
+		}
+		/* Unknown error */
+		printf("packetData: %d\n", code);
+		return -1;
+	}
+
+
+	length_code = packetData.readChar() & 127;
+
+	if( length_code <= 125 ) {
+		//index_first_mask = 2;
+
+		mask[0] = packetData.readChar();
+		mask[1] = packetData.readChar();
+		mask[2] = packetData.readChar();
+		mask[3] = packetData.readChar();
+	} else if( length_code == 126 ) {
+		//index_first_mask = 4;
+		packetData.readChars(4);
+		mask[0] = packetData.readChar();
+		mask[1] = packetData.readChar();
+		mask[2] = packetData.readChar();
+		mask[3] = packetData.readChar();
+	} else if( length_code == 127 ) {
+		//index_first_mask = 10;
+		packetData.readChars(8);
+		mask[0] = packetData.readChar();
+		mask[1] = packetData.readChar();
+		mask[2] = packetData.readChar();
+		mask[3] = packetData.readChar();
+	}
+
+	packet_length = packetData.length();
+
+	auto * dst = new unsigned char[packet_length];
+
+	j = 0;
+	while (packetData.bytesLeft()) {
+		dst[ j ] = packetData.readChar() ^ mask[ j % 4 ];
+		j++;
+	}
+
+	packetData.clear();
+	packetData.write(dst, packet_length);
+
+	delete [] dst;
+
+	return packet_length;
+}

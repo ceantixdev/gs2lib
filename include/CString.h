@@ -36,11 +36,7 @@ c:\mingw\bin\../lib/gcc/mingw32/4.6.2/include/c++/cstdio:166:11: erreur: '::snpr
 #include <cstring>
 #include <string>
 #include <vector>
-#if defined(WOLFSSL_ENABLED)
-#include <wolfssl/wolfcrypt/arc4.h>
-#include <wolfssl/ssl.h>
-#include <wolfssl/internal.h>
-#endif
+
 /*
 #include "bzlib.h"
 #include "zlib.h"
@@ -93,6 +89,7 @@ class CString
 		CString readChars(int pLength);
 		CString readString(const CString& pString = " ");
 		int read(char *pDest, int pSize);
+		int write(unsigned char *pSrc, int pSize, bool nullTerminate = true);
 		int write(const char *pSrc, int pSize, bool nullTerminate = true);
 		int write(const CString& pString);
 		void clear(int pCount = 10);
@@ -153,11 +150,13 @@ class CString
 		inline CString& trimI();
 
 #if defined(WOLFSSL_ENABLED)
+		CString& sha1I();
 		CString& rc4_encryptI(const char * key, int keylen);
 		CString& rc4_decryptI(const char * key, int keylen);
 #endif
 		CString& encodesimpleI(unsigned int buffSize = 65536);
 		CString& decodesimpleI(unsigned int buffSize = 65536, bool includeNullTermination = false);
+		CString& base64encodeI();
 		CString& base64decodeI();
 		CString& bzcompressI(unsigned int buffSize = 65536);
 		CString& bzuncompressI(unsigned int buffSize = 65536);

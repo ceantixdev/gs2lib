@@ -437,10 +437,13 @@ int webSocketFixIncomingPacket( CString& packetData ) {
 	unsigned char mask[4];
 	unsigned int packet_length = 0;
 	unsigned int length_code = 0;
+	int index_first_mask = 0;
+	int index_first_data_byte = 0;
 
-	volatile auto code = packetData.readChar();
+	auto bytes = packetData.text();
+	volatile auto code = bytes[0];
 	volatile auto is_fin = (code & 0xFF) >> WS_FIN_SHIFT;
-	volatile auto opcode = (code & 0xF);
+	volatile auto opcode = (code & 0x0F);
 
 	if( opcode != WS_FR_OP_BIN ) {
 		//dst = NULL;
@@ -449,44 +452,44 @@ int webSocketFixIncomingPacket( CString& packetData ) {
 			return -2;
 		}
 		/* Unknown error */
-		printf("packetData: %d\n", code);
+		printf("packetData: %d\n", opcode);
 		return -1;
 	}
 
 
-	length_code = packetData.readChar() & 127;
+	length_code = bytes[1] & 127;
 
 	if( length_code <= 125 ) {
-		//index_first_mask = 2;
+		index_first_mask = 2;
 
-		mask[0] = packetData.readChar();
-		mask[1] = packetData.readChar();
-		mask[2] = packetData.readChar();
-		mask[3] = packetData.readChar();
+		mask[0] = bytes[2];
+		mask[1] = bytes[3];
+		mask[2] = bytes[4];
+		mask[3] = bytes[5];
 	} else if( length_code == 126 ) {
-		//index_first_mask = 4;
-		packetData.readChars(4);
-		mask[0] = packetData.readChar();
-		mask[1] = packetData.readChar();
-		mask[2] = packetData.readChar();
-		mask[3] = packetData.readChar();
+		index_first_mask = 4;
+
+		mask[0] = bytes[4];
+		mask[1] = bytes[5];
+		mask[2] = bytes[6];
+		mask[3] = bytes[7];
 	} else if( length_code == 127 ) {
-		//index_first_mask = 10;
-		packetData.readChars(8);
-		mask[0] = packetData.readChar();
-		mask[1] = packetData.readChar();
-		mask[2] = packetData.readChar();
-		mask[3] = packetData.readChar();
+		index_first_mask = 10;
+
+		mask[0] = bytes[10];
+		mask[1] = bytes[11];
+		mask[2] = bytes[12];
+		mask[3] = bytes[13];
 	}
 
-	packet_length = packetData.length();
+	index_first_data_byte = index_first_mask + 4;
+
+	packet_length = packetData.length() - index_first_data_byte;
 
 	auto * dst = new unsigned char[packet_length];
 
-	j = 0;
-	while (packetData.bytesLeft()) {
-		dst[ j ] = packetData.readChar() ^ mask[ j % 4 ];
-		j++;
+	for( i = index_first_data_byte, j = 0; i < packetData.length() && j < packet_length; i++, j++ ) {
+		dst[ j ] = ( unsigned char )bytes[ i ] ^ mask[ j % 4];
 	}
 
 	packetData.clear();

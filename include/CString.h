@@ -75,6 +75,8 @@ class CString
 		inline bool isEmpty() const;
 		inline char * text();
 		inline const char * text() const;
+		inline std::string toString();
+		inline std::string toString() const;
 		inline int bytesLeft() const;
 		inline int length() const;
 		inline int readPos() const;
@@ -275,6 +277,16 @@ inline char * CString::text()
 inline const char * CString::text() const
 {
 	return buffer;
+}
+
+inline std::string CString::toString()
+{
+	return std::string(buffer, length());
+}
+
+inline std::string CString::toString() const
+{
+	return std::string(buffer, length());
 }
 
 inline int CString::bytesLeft() const

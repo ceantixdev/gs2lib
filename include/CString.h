@@ -36,11 +36,13 @@ c:\mingw\bin\../lib/gcc/mingw32/4.6.2/include/c++/cstdio:166:11: erreur: '::snpr
 #include <cstring>
 #include <string>
 #include <vector>
+#include <algorithm>
 
 /*
 #include "bzlib.h"
 #include "zlib.h"
 */
+
 #ifndef MAX
 	#define MAX(a, b)	((a) > (b) ? (a) : (b))
 	#define MIN(a, b)	((a) < (b) ? (a) : (b))
@@ -48,9 +50,11 @@ c:\mingw\bin\../lib/gcc/mingw32/4.6.2/include/c++/cstdio:166:11: erreur: '::snpr
 #define clip(a, b, c) MAX(MIN((a), (c)), (b))
 #define inrange(a, b, c) ((a) >= (b) && (a) <= (c))
 
-#define strtofloat(a) atof(a.text())
+#define strtofloat(a) std::strtof(a.text(), nullptr) //atof(a.text())
 #define strtoint(a) atoi(a.text())
 #define strtolong(a) atol(a.text())
+
+const int INTERNAL_BUFFER_SIZE = 32;
 
 class CString
 {
@@ -60,30 +64,35 @@ class CString
 		CString(const char *pString);
 		CString(const CString& pString);
 		CString(const std::string& pString);
-		CString(char pChar);
-		CString(double pDouble);
-		CString(float pFloat);
-		CString(int pInteger);
-		CString(unsigned int pUInteger);
-		CString(long pLInteger);
-		CString(unsigned long pLUInteger);
-		CString(long long pLLInteger);
-		CString(unsigned long long pLLUInteger);
+		CString(char value);
+		CString(double value);
+		CString(float value);
+		CString(int value);
+		CString(unsigned int value);
+		CString(long value);
+		CString(unsigned long value);
+		CString(long long value);
+		CString(unsigned long long value);
 		~CString();
 
+		/*
+		* Move Semantics
+		*/
+		CString(CString&& o) noexcept;
+		CString& operator= (CString&& o) noexcept;
+
 		/* Retrieve Information */
-		inline bool isEmpty() const;
-		inline char * text();
-		inline const char * text() const;
-		inline std::string toString();
-		inline std::string toString() const;
-		inline int bytesLeft() const;
-		inline int length() const;
-		inline int readPos() const;
-		inline int writePos() const;
-		inline void setRead(int pRead);
-		inline void setSize(int pSize);
-		inline void setWrite(int pWrite);
+		bool isEmpty() const;
+		char * text();
+		const char * text() const;
+		std::string toString() const;
+		int bytesLeft() const;
+		int length() const;
+		int readPos() const;
+		int writePos() const;
+		void setRead(int pRead);
+		void setSize(int pSize);
+		void setWrite(int pWrite);
 
 		/* Data-Management */
 		bool load(const CString& pString);
@@ -94,7 +103,8 @@ class CString
 		int write(unsigned char *pSrc, int pSize, bool nullTerminate = true);
 		int write(const char *pSrc, int pSize, bool nullTerminate = true);
 		int write(const CString& pString);
-		void clear(int pCount = 10);
+		void clear(size_t size = 30);
+		void resize(size_t size);
 
 		/* Functions */
 		CString escape() const;
@@ -170,8 +180,9 @@ class CString
 		inline CString& guntokenizeI();
 
 		/* Operators */
-		char& operator[](int pIndex);
-		char operator[](int pIndex) const;
+		const char& operator[](const int& pIndex) const;
+		char& operator[](const int& pIndex);
+		
 		CString& operator=(const CString& pString);
 		CString& operator<<(const CString& pString);
 		CString& operator+=(const CString& pString);
@@ -223,15 +234,77 @@ class CString
 	protected:
 		char *buffer;
 		int buffc, sizec, readc, writec;
+		char * _heapBuffer;
+		char _internalBuffer[INTERNAL_BUFFER_SIZE];
 };
 
 /*
 	Inline Functions
 */
 
+inline CString::CString() : _heapBuffer(0), buffer(_internalBuffer), buffc(30), sizec(0), readc(0), writec(0)
+{
+	_internalBuffer[0] = 0;
+}
+
+inline CString::CString(char pChar) : _heapBuffer(0), buffer(_internalBuffer), buffc(30), sizec(1), readc(0), writec(1)
+{
+	_internalBuffer[0] = pChar;
+	_internalBuffer[1] = 0;
+}
+
+inline CString::CString(CString&& o) noexcept : _heapBuffer(nullptr)
+{
+	*this = std::move(o);
+}
+
+inline CString& CString::operator=(CString&& o) noexcept
+{
+	// copy internal buffer if its being used
+	if (!o._heapBuffer)
+	{
+		memcpy(_internalBuffer, o._internalBuffer, o.buffc);
+		buffer = _internalBuffer;
+	}
+	else buffer = o._heapBuffer;
+
+	// swap both states
+	std::swap(_heapBuffer, o._heapBuffer);
+	buffc = o.buffc;
+	sizec = o.sizec;
+	readc = o.readc;
+	writec = o.writec;
+	o.clear(30);
+	
+	return *this;
+}
+
+inline CString::~CString()
+{
+	if (_heapBuffer)
+	{
+		free(_heapBuffer);
+	}
+}
+
 inline bool CString::isEmpty() const
 {
 	return (length() < 1);
+}
+
+inline const char& CString::operator[](const int& idx) const
+{
+	return buffer[idx];
+}
+
+inline char& CString::operator[](const int& idx)
+{
+	return buffer[idx];
+}
+
+inline int CString::write(const CString& pString)
+{
+	return write(pString.text(), pString.length());
 }
 
 inline CString& CString::operator>>(const char pData)
@@ -279,19 +352,14 @@ inline const char * CString::text() const
 	return buffer;
 }
 
-inline std::string CString::toString()
-{
-	return std::string(buffer, length());
-}
-
 inline std::string CString::toString() const
 {
-	return std::string(buffer, length());
+	return std::string(text(), length());
 }
 
 inline int CString::bytesLeft() const
 {
-	return MAX(0, length()-readPos());
+	return std::max(0, length()-readPos());
 }
 
 inline int CString::length() const
@@ -311,17 +379,19 @@ inline int CString::writePos() const
 
 inline void CString::setRead(int pRead)
 {
-	readc = clip(pRead, 0, sizec);
+	readc = std::clamp(pRead, 0, sizec);
 }
 
 inline void CString::setSize(int pSize)
 {
-	sizec = MAX(0, pSize);
+	sizec = std::max(0, pSize);
+	readc = std::min(readc, sizec);
+	writec = std::min(writec, sizec);
 }
 
 inline void CString::setWrite(int pWrite)
 {
-	writec = clip(pWrite, 0, sizec);
+	writec = std::clamp(pWrite, 0, sizec);
 }
 
 inline unsigned char CString::readGUChar()

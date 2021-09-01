@@ -295,14 +295,14 @@ enum
 	PLO_UNKNOWN184				= 184,	// Valid message in 5.07.  The code it uses is unique.  The string "screenshots" is present in the code.  I didn't look in detail.  Unhandled by 6.037. -Codr
 	PLO_UNKNOWN185				= 185,	// Valid message in 5.07 and 6.037.  The code it uses is unique. -Codr
 	PLO_UNKNOWN186				= 186,	// Valid message in 5.07 and 6.037.  The code it uses is unique. -Codr
-	PLO_UPDATEPACKAGEISUPDATED				= 187,	// Valid message in 5.07 and 6.037.  The code it uses is unique. -Codr
+	PLO_UPDATEPACKAGEISUPDATED	= 187,	// Valid message in 5.07 and 6.037.  The code it uses is unique. -Codr
 	PLO_NC_CLASSDELETE			= 188,	// {188}{class}  Codr note: Unhandled by 5.07+.
 	PLO_MOVE2					= 189,	// {189}{INT id}...
 	PLO_UNKNOWN190				= 190,	// Was blank.  Sent before weapon list. NOTE: Sending this packet makes the client login to irc, request bantypes, pmguilds, pmservers, globalpms, buddytracking and stuff... Mainly tied to setTex
 	PLO_UNKNOWN191				= 191,	// Valid message in 5.07 and 6.037.  The code it uses is unique. -Codr
 	PLO_NC_WEAPONGET			= 192,	// {192}{CHAR name length}{name}{CHAR image length}{image}{script}  Codr note: Unhandled by 5.07+.
 	PLO_UNKNOWN193				= 193,	// Valid message in 5.07.  The code it uses is unique.  The first parameter is likely a 5-byte integer.  There may be more.  Unhandled by 6.037. -Codr
-	PLO_UNKNOWN194				= 194,	// Was blank.  Sent before weapon list.
+	PLO_CLEARWEAPONS			= 194,	// Was blank.  Sent before weapon list. 
 	PLO_UNKNOWN195				= 195,	// Something to do with ganis.  [195] )twiz-icon"SETBACKTO "
 
 	// Seems to register NPCs or something on the client.

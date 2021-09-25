@@ -19,6 +19,7 @@
  * along with GS2Emu. If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <cassert>
 #include "IDebug.h"
 #include "CString.h"
 #include "bzlib.h"
@@ -60,119 +61,89 @@
 /*
 	Constructor ~ Deconstructor
 */
-
-CString::CString()
-: buffer(0), buffc(0), sizec(0), readc(0), writec(0)
-{
-	clear(30);
-}
-
 CString::CString(const char *pString)
-: buffer(0), buffc(0), sizec(0), readc(0), writec(0)
+	: _heapBuffer(0), buffer(_internalBuffer), buffc(30), sizec(0), readc(0), writec(0)
 {
-	if (pString == 0)
+	if (pString != 0)
 	{
-		clear(30);
-		return;
+		auto length = strlen(pString);
+		if (length != 0)
+		{
+			clear(length);
+			write(pString, length);
+			return;
+		}
 	}
 
-	int length = strlen(pString);
-	if (length != 0)
-	{
-		clear(length);
-		write(pString, length);
-	}
-	else clear(30);
+	_internalBuffer[0] = 0;
 }
 
 CString::CString(const std::string& pString)
-		: buffer(0), buffc(0), sizec(0), readc(0), writec(0)
+	: _heapBuffer(nullptr), buffer(_internalBuffer), buffc(30), sizec(0), readc(0), writec(0) 
 {
-	clear(pString.length());
 	write(pString.c_str(), pString.length());
 }
 
 CString::CString(const CString& pString)
-: buffer(0), buffc(0), sizec(0), readc(0), writec(0)
+	: _heapBuffer(nullptr), buffer(_internalBuffer), buffc(30), sizec(0), readc(0), writec(0)
 {
-	clear(pString.length());
 	write(pString.text(), pString.length());
 }
 
-CString::CString(char pChar)
-: buffer(0), buffc(0), sizec(0), readc(0), writec(0)
+CString::CString(double val)
+	: _heapBuffer(nullptr), buffer(_internalBuffer), buffc(30), readc(0)
 {
-	clear(sizeof(char));
-	writeChar(pChar);
+	sprintf(_internalBuffer, "%f", val);
+	sizec = writec = strlen(_internalBuffer);
 }
 
-CString::CString(double pDouble)
-: buffer(0), buffc(0), sizec(0), readc(0), writec(0)
+CString::CString(float val)
+	: _heapBuffer(nullptr), buffer(_internalBuffer), buffc(30), readc(0)
 {
-	char tempBuff[32];
-	sprintf(tempBuff, "%f", pDouble);
-	*this = tempBuff;
+	sprintf(_internalBuffer, "%.2f", val);
+	sizec = writec = strlen(_internalBuffer);
 }
 
-CString::CString(float pFloat)
-: buffer(0), buffc(0), sizec(0), readc(0), writec(0)
+CString::CString(int val)
+	: _heapBuffer(nullptr), buffer(_internalBuffer), buffc(30), readc(0)
 {
-	char tempBuff[32];
-	sprintf(tempBuff, "%.2f", pFloat);
-	*this = tempBuff;
+	sprintf(_internalBuffer, "%i", val);
+	sizec = writec = strlen(_internalBuffer);
 }
 
-CString::CString(int pInteger)
-: buffer(0), buffc(0), sizec(0), readc(0), writec(0)
+CString::CString(unsigned int val)
+	: _heapBuffer(0), buffer(_internalBuffer), buffc(30), readc(0)
 {
-	char tempBuff[32];
-	sprintf(tempBuff, "%i", pInteger);
-	*this = tempBuff;
+	sprintf(_internalBuffer, "%u", val);
+	sizec = writec = strlen(_internalBuffer);
 }
 
-CString::CString(unsigned int pUInteger)
-: buffer(0), buffc(0), sizec(0), readc(0), writec(0)
+CString::CString(long val)
+	: _heapBuffer(nullptr), buffer(_internalBuffer), buffc(30), readc(0)
 {
-	char tempBuff[32];
-	sprintf(tempBuff, "%u", pUInteger);
-	*this = tempBuff;
+	sprintf(_internalBuffer, "%ld", val);
+	sizec = writec = strlen(_internalBuffer);
 }
 
-CString::CString(long pLInteger)
-: buffer(0), buffc(0), sizec(0), readc(0), writec(0)
+CString::CString(unsigned long val)
+	: _heapBuffer(nullptr), buffer(_internalBuffer), buffc(30), readc(0)
 {
-	char tempBuff[32];
-	sprintf(tempBuff, "%ld", pLInteger);
-	*this = tempBuff;
+	sprintf(_internalBuffer, "%lu", val);
+	sizec = writec = strlen(_internalBuffer);
 }
 
-CString::CString(unsigned long pLUInteger)
-: buffer(0), buffc(0), sizec(0), readc(0), writec(0)
+CString::CString(long long val)
+	: _heapBuffer(nullptr), buffer(_internalBuffer), buffc(30), readc(0)
 {
-	char tempBuff[32];
-	sprintf(tempBuff, "%lu", pLUInteger);
-	*this = tempBuff;
+	sprintf(_internalBuffer, "%lld", val);
+	sizec = writec = strlen(_internalBuffer);
 }
 
-CString::CString(long long pLLInteger)
-: buffer(0), buffc(0), sizec(0), readc(0), writec(0)
+CString::CString(unsigned long long val)
+	: _heapBuffer(nullptr), buffer(_internalBuffer), buffc(30), readc(0)
 {
-	char tempBuff[64];
-	sprintf(tempBuff, "%lld", pLLInteger);
-	*this = tempBuff;
-}
-
-CString::CString(unsigned long long pLLUInteger)
-: buffer(0), buffc(0), sizec(0), readc(0), writec(0)
-{
-	char tempBuff[64];
-	sprintf(tempBuff, "%llu", pLLUInteger);
-	*this = tempBuff;
-}
-
-CString::~CString()
-{
-	if (buffer) free(buffer);
+	sprintf(_internalBuffer, "%llu", val);
+	sizec = writec = strlen(_internalBuffer);
 }
 
 /*
@@ -198,7 +169,7 @@ bool CString::load(const CString& pString)
 	else
 	{
 		wcstr = new wchar_t[pString.length() + 1];
-		for (int i = 0; i < pString.length(); ++i)
+		for (auto i = 0; i < pString.length(); ++i)
 			wcstr[i] = (unsigned char)pString[i];
 		wcstr[pString.length()] = 0;
 	}
@@ -240,7 +211,7 @@ bool CString::save(const CString& pString) const
 	else
 	{
 		wcstr = new wchar_t[pString.length() + 1];
-		for (int i = 0; i < pString.length(); ++i)
+		for (auto i = 0; i < pString.length(); ++i)
 			wcstr[i] = (unsigned char)pString[i];
 		wcstr[pString.length()] = 0;
 	}
@@ -264,8 +235,9 @@ bool CString::save(const CString& pString) const
 
 CString CString::readChars(int pLength)
 {
+	pLength = std::clamp(pLength, 0, sizec - readc);
+
 	CString retVal;
-	pLength = clip(pLength, 0, sizec - readc);
 	retVal.write(&buffer[readc], pLength);
 	readc += pLength;
 	return retVal;
@@ -309,13 +281,10 @@ int CString::write(unsigned char *pSrc, int pSize, bool nullTerminate)
 {
 	if (!pSize)
 		return 0;
-	if (buffer == 0)
-		clear(pSize);
 
 	if (writec + pSize >= buffc)
 	{
-		buffc = writec + pSize + 10 + (sizec / 3);
-		buffer = (char*)realloc(buffer, buffc);
+		resize(writec + pSize + 10 + (sizec / 3));
 	}
 
 	memcpy(&buffer[writec], pSrc, pSize);
@@ -323,22 +292,17 @@ int CString::write(unsigned char *pSrc, int pSize, bool nullTerminate)
 	if (nullTerminate)
 		buffer[writec] = 0;
 	sizec = (writec > sizec ? writec : sizec);
-	//buffer[sizec] = 0;
 	return pSize;
 }
-
 
 int CString::write(const char *pSrc, int pSize, bool nullTerminate)
 {
 	if (!pSize)
 		return 0;
-	if (buffer == 0)
-		clear(pSize);
 
 	if (writec + pSize >= buffc)
 	{
-		buffc = writec + pSize + 10 + (sizec / 3);
-		buffer = (char*)realloc(buffer, buffc);
+		resize(writec + pSize + 10 + (sizec / 3));
 	}
 
 	memcpy(&buffer[writec], pSrc, pSize);
@@ -346,22 +310,59 @@ int CString::write(const char *pSrc, int pSize, bool nullTerminate)
 	if (nullTerminate)
 		buffer[writec] = 0;
 	sizec = (writec > sizec ? writec : sizec);
-	//buffer[sizec] = 0;
 	return pSize;
 }
 
-int CString::write(const CString& pString)
+void CString::clear(size_t size)
 {
-	return write(pString.text(), pString.length());
+	if (_heapBuffer)
+	{
+		free(_heapBuffer);
+		_heapBuffer = nullptr;
+	}
+
+	//
+	++size;
+
+	if (size >= INTERNAL_BUFFER_SIZE)
+	{
+		_heapBuffer = (char*)malloc(size);
+		buffer = _heapBuffer;
+	}
+	else buffer = _internalBuffer;
+
+	sizec = readc = writec = 0;
+	buffc = std::max(size_t{ 1 }, size);
+	buffer[0] = 0;
 }
 
-void CString::clear(int pSize)
+void CString::resize(size_t size)
 {
-	if (buffer) free(buffer);
-	sizec = readc = writec = 0;
-	buffc = (pSize > 0 ? pSize : 1) + 1;
-	buffer = (char*)malloc(buffc);
-	buffer[0] = 0;
+	if (size < buffc)
+		return;
+
+	++size;
+
+	if (size >= INTERNAL_BUFFER_SIZE)
+	{
+		if (!_heapBuffer)
+		{
+			_heapBuffer = (char*)malloc(size);
+			memcpy(_heapBuffer, _internalBuffer, buffc);
+		}
+		else
+		{
+			auto tmp = _heapBuffer;
+			_heapBuffer = (char*)realloc(_heapBuffer, size);
+			if (!_heapBuffer)
+				free(tmp);
+		}
+
+		buffer = _heapBuffer;
+		assert(buffer != nullptr); // allocation failure, unhandled
+	}
+
+	buffc = size;
 }
 
 /*
@@ -372,7 +373,7 @@ CString CString::escape() const
 {
 	CString retVal;
 
-	for (int i = 0; i < length(); i++)
+	for (auto i = 0; i < length(); i++)
 	{
 		if (buffer[i] == '\\')
 			retVal << "\\\\";
@@ -391,7 +392,7 @@ CString CString::unescape() const
 {
 	CString retVal;
 
-	for (int i = 0; i < length() - 1; i++)
+	for (auto i = 0; i < length() - 1; i++)
 	{
 		char cur = buffer[i];
 		char nex = buffer[++i];
@@ -429,7 +430,7 @@ CString CString::remove(int pStart, int pLength) const
 	if (pLength == -1)
 		pLength = retVal.length();
 
-	pLength = clip(pLength, 0, retVal.length()-pStart);
+	pLength = std::clamp(pLength, 0, retVal.length()-pStart);
 	memmove(retVal.text() + pStart, retVal.text() + pStart + pLength, retVal.length() - pStart - (pLength - 1));
 	retVal.setSize(retVal.length() - pLength);
 	retVal[retVal.length()] = 0;
@@ -477,8 +478,8 @@ CString CString::subString(int pStart, int pLength) const
 		return CString();
 
 	CString retVal;
-	pStart = clip(pStart, 0, length());
-	pLength = clip(pLength, 0, length()-pStart);
+	pStart = std::clamp(pStart, 0, length());
+	pLength = std::clamp(pLength, 0, length()-pStart);
 
 	if (pLength > 0)
 		retVal.write(&buffer[pStart], pLength);
@@ -488,7 +489,7 @@ CString CString::subString(int pStart, int pLength) const
 CString CString::toLower() const
 {
 	CString retVal(*this);
-	for (int i = 0; i < retVal.length(); i++)
+	for (auto i = 0; i < retVal.length(); i++)
 	{
 		if (inrange(retVal[i], 'A', 'Z'))
 			retVal[i] += 32;
@@ -500,7 +501,7 @@ CString CString::toLower() const
 CString CString::toUpper() const
 {
 	CString retVal(*this);
-	for (int i = 0; i < retVal.length(); i++)
+	for (auto i = 0; i < retVal.length(); i++)
 	{
 		if (inrange(retVal[i], 'a', 'z'))
 			retVal[i] -= 32;
@@ -516,7 +517,7 @@ CString CString::trim() const
 
 CString CString::trimLeft() const
 {
-	for (int i = 0; i < length(); ++i)
+	for (auto i = 0; i < length(); ++i)
 	{
 		if ((unsigned char)buffer[i] > (unsigned char)' ')
 			return subString(i, length() - i);
@@ -528,7 +529,7 @@ CString CString::trimLeft() const
 
 CString CString::trimRight() const
 {
-	for (int i = length() - 1; i >= 0; --i)
+	for (auto i = length() - 1; i >= 0; --i)
 	{
 		if ((unsigned char)buffer[i] > (unsigned char)' ')
 			return subString(0, i+1);
@@ -840,7 +841,7 @@ int CString::find(const CString& pString, int pStart) const
 {
 	const char* obuffer = pString.text();
 	const int olen = pString.length();
-	for (int i = pStart; i <= sizec - olen; ++i)
+	for (auto i = pStart; i <= sizec - olen; ++i)
 	{
 		if (buffer[i] == 0)
 		{
@@ -855,7 +856,7 @@ int CString::find(const CString& pString, int pStart) const
 
 int CString::findi(const CString& pString, int pStart) const
 {
-	for (int i = pStart; i <= length() - pString.length(); ++i)
+	for (auto i = pStart; i <= length() - pString.length(); ++i)
 	{
 		if (strncasecmp(&buffer[i], pString.text(), pString.length()) == 0)
 			return i;
@@ -872,9 +873,8 @@ int CString::findl(char pChar) const
 
 std::vector<CString> CString::tokenize(const CString& pString, bool keepEmpty) const
 {
-	CString retVal(*this);
 	std::vector<CString> strList;
-	char *string = strdup(retVal.text());
+	char *string = strdup(buffer);
 	char *tok;
 
 	if (!keepEmpty)
@@ -882,7 +882,7 @@ std::vector<CString> CString::tokenize(const CString& pString, bool keepEmpty) c
 		tok = strtok(string, pString.text());
 		while ( tok != nullptr )
 		{
-			strList.emplace_back(tok);
+			strList.emplace_back(CString{ tok });
 			tok = strtok(nullptr, pString.text());
 		}
 	}
@@ -904,7 +904,7 @@ std::vector<CString> CString::tokenizeConsole() const
 	std::vector<CString> strList;
 	bool quotes = false;
 	CString str;
-	for (int i = 0; i < sizec; ++i)
+	for (auto i = 0; i < sizec; ++i)
 	{
 		switch (buffer[i])
 		{
@@ -1019,7 +1019,7 @@ CString CString::gtokenize() const
 			// Check for a complex word.
 			bool complex = false;
 			if (temp[0] == '"') complex = true;
-			for (int i = 0; i < temp.length() && !complex; ++i)
+			for (auto i = 0; i < temp.length() && !complex; ++i)
 			{
 				if (temp[i] < 33 || temp[i] > 126 || temp[i] == 44 || temp[i] == 47)
 					complex = true;
@@ -1247,14 +1247,14 @@ bool CString::match(const CString& pMask) const
 
 bool CString::comparei(const CString& pOther) const
 {
-	if (strncasecmp(buffer, pOther.text(), MAX(sizec, pOther.length())) == 0)
+	if (strncasecmp(buffer, pOther.text(), std::max(sizec, pOther.length())) == 0)
 		return true;
 	return false;
 }
 
 bool CString::contains(const CString& characters) const
 {
-	for (int i = 0; i < sizec; ++i)
+	for (auto i = 0; i < sizec; ++i)
 	{
 		for (int j = 0; j < characters.length(); ++j)
 		{
@@ -1267,7 +1267,7 @@ bool CString::contains(const CString& characters) const
 
 bool CString::onlyContains(const CString& characters) const
 {
-	for (int i = 0; i < sizec; ++i)
+	for (auto i = 0; i < sizec; ++i)
 	{
 		bool test = false;
 		for (int j = 0; j < characters.length(); ++j)
@@ -1288,7 +1288,7 @@ bool CString::isNumber() const
 {
 	const char numbers[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.' };
 	char periodCount = 0;
-	for (int i = 0; i < sizec; ++i)
+	for (auto i = 0; i < sizec; ++i)
 	{
 		bool isNum = false;
 		for (int j = 0; j < 11; ++j)
@@ -1310,7 +1310,6 @@ bool CString::isAlphaNumeric() const
 {
 	return onlyContains("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789");
 }
-
 
 /*
 	Operators
@@ -1346,21 +1345,6 @@ CString& CString::operator+=(const CString& pString)
 CString CString::operator+(const CString& pString)
 {
 	return CString(*this) << pString;
-}
-
-//CString::operator const char*() const
-//{
-//	return buffer;
-//}
-
-char& CString::operator[](int pIndex)
-{
-	return buffer[pIndex];
-}
-
-char CString::operator[](int pIndex) const
-{
-	return buffer[pIndex];
 }
 
 bool operator==(const CString& pString1, const CString& pString2)
@@ -1536,18 +1520,19 @@ CString& CString::writeGInt5(const unsigned long long pData)
 	if (t > 0xFFFFFFFF) t = 0xFFFFFFFF;
 
 	unsigned char val[5];
-	val[0] = t >> 28;
+
+	val[0] = (t >> 28) & 0xFF;
 	if (val[0] > 15) val[0] = 15; //This is capped low because higher just results in values over 0xFFFFFFFF.
-	t -= val[0] << 28;
-	val[1] = t >> 21;
+	t -= ((unsigned long long)val[0] << 28);
+	val[1] = (t >> 21) & 0xFF;
 	if (val[1] > 223) val[1] = 223;
-	t -= val[1] << 21;
-	val[2] = t >> 14;
+	t -= ((unsigned long long)val[1] << 21);
+	val[2] = (t >> 14) & 0xFF;
 	if (val[2] > 223) val[2] = 223;
-	t -= val[2] << 14;
-	val[3] = t >> 7;
+	t -= ((unsigned long long)val[2] << 14);
+	val[3] = (t >> 7) & 0xFF;
 	if (val[3] > 223) val[3] = 223;
-	val[4] = t - (val[3] << 7);
+	val[4] = (t - ((unsigned long long)val[3] << 7)) & 0xFF;
 
 	for (int a = 0;a < 5;++a) val[a] += 32;
 	write((char *)&val,5);

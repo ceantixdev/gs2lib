@@ -19,19 +19,31 @@
 #  along with GS2Emu.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+cmake_minimum_required(VERSION 3.0.0)
+
 file(GLOB SOURCES src/*.c)
 
 file(GLOB HEADERS src/*.h)
 
-set(TARGET_NAME "bzip2")
+project(bzip2 C)
+
+set(TARGET_NAME ${PROJECT_NAME})
+
+set(CMAKE_DEBUG_POSTFIX _d)
+
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/${BIN_DIR})
+
+message(${PROJECT_SOURCE_DIR}/lib)
 
 if(APPLE)
-    add_library(${TARGET_NAME} ${SOURCES} ${HEADERS})
+    add_library(${TARGET_NAME} STATIC ${SOURCES} ${HEADERS})
 
     # Enable ARC (automatic reference counting) for OS X build
     set_property(
         TARGET ${TARGET_NAME} APPEND_STRING PROPERTY COMPILE_FLAGS "-fobjc-arc"
     )
 else()
-    add_library(${TARGET_NAME} ${SOURCES} ${HEADERS})
+    add_library(${TARGET_NAME} STATIC ${SOURCES} ${HEADERS})
 endif()

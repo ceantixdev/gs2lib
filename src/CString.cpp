@@ -79,7 +79,7 @@ CString::CString(const char *pString)
 }
 
 CString::CString(const std::string& pString)
-	: _heapBuffer(nullptr), buffer(_internalBuffer), buffc(30), sizec(0), readc(0), writec(0) 
+	: _heapBuffer(nullptr), buffer(_internalBuffer), buffc(30), sizec(0), readc(0), writec(0)
 {
 	write(pString.c_str(), pString.length());
 }
@@ -1422,6 +1422,22 @@ CString& CString::writeInt(const int pData, bool nullTerminate)
 	val[2] = ((pData >> 8) & 0xFF);
 	val[3] = (pData & 0xFF);
 	write((char *)&val, 4, nullTerminate);
+	return *this;
+}
+
+
+CString& CString::writeInt3(const int pData, bool nullTerminate)
+{
+	unsigned int t = pData;
+
+	unsigned char val[3];
+
+	val[0] = t >> 0x10;
+	val[1] = t >> 0x8;
+	val[2] = t;
+
+	write((char *)&val,3, nullTerminate);
+
 	return *this;
 }
 

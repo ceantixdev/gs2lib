@@ -182,7 +182,7 @@ class CString
 		/* Operators */
 		const char& operator[](const int& pIndex) const;
 		char& operator[](const int& pIndex);
-		
+
 		CString& operator=(const CString& pString);
 		CString& operator<<(const CString& pString);
 		CString& operator+=(const CString& pString);
@@ -209,6 +209,7 @@ class CString
 		CString& writeChar(const char pData, bool nullTerminate = true);
 		CString& writeShort(const short pData, bool nullTerminate = true);
 		CString& writeInt(const int pData, bool nullTerminate = true);
+		CString& writeInt3(const int pData, bool nullTerminate = true);
 		char readChar();
 		short readShort();
 		int readInt();
@@ -275,7 +276,7 @@ inline CString& CString::operator=(CString&& o) noexcept
 	readc = o.readc;
 	writec = o.writec;
 	o.clear(30);
-	
+
 	return *this;
 }
 

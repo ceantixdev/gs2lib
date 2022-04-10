@@ -19,7 +19,7 @@
 #  along with GS2Emu.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-cmake_minimum_required(VERSION 2.8.5)
+cmake_minimum_required(VERSION 3.0.0)
 
 project(gs2lib CXX)
 
@@ -48,6 +48,19 @@ string(TOLOWER ${PROJECT_NAME} PROJECT_NAME_LOWER)
 # Additional CMake modules
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 
+# Version number in format X.YY.ZZ
+set(VER_X 1)
+set(VER_Y 0)
+set(VER_Z 0)
+set(VER_EXTRA "-beta" CACHE STRING "Extra version")
+
+set(VER_FULL "${VER_X}.${VER_Y}.${VER_Z}${VER_EXTRA}")
+
+set(GSERVER_CREDITS "Joey, Nalin, Codr and Cadavre")
+
+STRING(REGEX REPLACE " " "-" VER_CPACK ${VER_FULL})
+
+
 if(APPLE)
 	# Set variables for generating the Info.plist file
 	set(MACOSX_BUNDLE_BUNDLE_VERSION "${VER_FULL}")
@@ -59,6 +72,7 @@ if(APPLE)
 	set(MACOSX_BUNDLE_SHORT_VERSION_STRING "${VER_FULL}")
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -std=gnu++17")
+	cmake_policy(SET CMP0042 NEW)
 elseif(WIN32)
 	# Visual C++ Compiler options
 	if(MSVC)
@@ -75,7 +89,7 @@ elseif(WIN32)
 		# Enable parallel compilation
 		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /MP")
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
-		
+
 		# Enable static linkage of the Microsoft Visual C/C++ Runtime
 		set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /MTd")
 		set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /MT")
@@ -104,8 +118,12 @@ elseif(WIN32)
 
 elseif(AROS)
 elseif(AMIGA)
+
+	add_definitions(-D_DEFAULT_SOURCE -D_POSIX_C_SOURCE=1)
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++17")
 else()
-	if(NOT NOSTATIC)
+	if(STATIC)
 	#	SET(CMAKE_EXE_LINKER_FLAGS "-static")
 	endif()
 
@@ -115,8 +133,8 @@ else()
 
 endif()
 
-option(NOSTATIC "Don't compile as a static runtime." OFF)
-if(NOSTATIC)
+option(STATIC "Compile as a static runtime." ON)
+if(NOT STATIC)
 	message("Don't compile as a static runtime.")
 	set(BUILD_SHARED_LIBS TRUE CACHE BOOL "-" FORCE)
 else()
@@ -126,7 +144,7 @@ else()
 endif()
 
 # Prefer static linkage
-if(NOT NOSTATIC)
+if(STATIC)
 	set(SUFFIXES_ORIG ${CMAKE_FIND_LIBRARY_SUFFIXES})
 	set(CMAKE_FIND_LIBRARY_SUFFIXES .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
 endif()
@@ -135,7 +153,7 @@ find_package(ZLIB)
 if(NOT ZLIB_FOUND)
 	message("Zlib not found in system. Compiling it ourselves.")
 	add_subdirectory(${PROJECT_SOURCE_DIR}/dependencies/zlib EXCLUDE_FROM_ALL)
-	if(NOSTATIC)
+	if(STATIC)
 		set_target_properties(zlibstatic minigzip example PROPERTIES EXCLUDE_FROM_ALL 1 EXCLUDE_FROM_DEFAULT_BUILD 1)
 	else()
 		set_target_properties(zlib minigzip example PROPERTIES EXCLUDE_FROM_ALL 1 EXCLUDE_FROM_DEFAULT_BUILD 1)
@@ -145,22 +163,19 @@ endif()
 find_package(BZip2)
 if(NOT BZip2_FOUND)
 	message("Bzip2 not found in system. Compiling it ourselves.")
-	add_subdirectory(${PROJECT_SOURCE_DIR}/dependencies/bzip2)
+	add_subdirectory(${PROJECT_SOURCE_DIR}/dependencies/bzip2 EXCLUDE_FROM_ALL)
 endif()
 
 # Restore library suffixes
-if(NOT NOSTATIC)
+if(STATIC)
 	set(CMAKE_FIND_LIBRARY_SUFFIXES ${SUFFIXES_ORIG})
 endif()
 
 set(
 	SOURCES
 	src/CCommon.cpp
-	src/CEncryption.cpp
-	src/CFileQueue.cpp
 	src/CLog.cpp
 	src/CSettings.cpp
-	src/CSocket.cpp
 	src/CString.cpp
 	src/CTranslationManager.cpp
 	src/IUtil.cpp
@@ -170,11 +185,9 @@ set(
 set(
 	HEADERS
 	include/CCommon.h
-	include/CEncryption.h
-	include/CFileQueue.h
+
 	include/CLog.h
 	include/CSettings.h
-	include/CSocket.h
 	include/CString.h
 	include/CTimeout.h
 	include/CTranslationManager.h
@@ -184,16 +197,40 @@ set(
 	include/md5.h
 )
 
+option(NET "Compile with networking support." ON)
+if(NET)
+	list(APPEND
+			SOURCES
+			src/CEncryption.cpp
+			src/CFileQueue.cpp
+			src/CSocket.cpp
+	)
+
+	list(APPEND
+			HEADERS
+			include/CEncryption.h
+			include/CFileQueue.h
+			include/CSocket.h
+			)
+endif()
+
 include_directories(
 	${PROJECT_SOURCE_DIR}/include
 )
 
+set(GS2LIB_INCLUDE_DIRECTORY
+		"${PROJECT_SOURCE_DIR}/include"
+		"${PROJECT_BINARY_DIR}/include"
+		PARENT_SCOPE)
+
 if(NOT ZLIB_FOUND)
 	include_directories(${PROJECT_BINARY_DIR}/dependencies/zlib ${PROJECT_SOURCE_DIR}/dependencies/zlib)
+else()
+	include_directories(${ZLIB_INCLUDE_DIRS})
 endif()
 
 if(NOT BZip2_FOUND)
-	include_directories(${PROJECT_SOURCE_DIR}/dependencies/bzip2)
+	include_directories(${PROJECT_SOURCE_DIR}/dependencies/bzip2/src)
 endif()
 
 # Set target names for the libraries
@@ -201,10 +238,30 @@ set(TARGET_NAME ${PROJECT_NAME})
 
 add_library(${TARGET_NAME} ${SOURCES} ${HEADERS})
 
-if(NOT ZLIB_FOUND AND NOT NOSTATIC)
+option(WOLFSSL "Compile with WolfSSL support." OFF)
+if(NOT WOLFSSL)
+	message("Don't compile WolfSSL.")
+else()
+	message("Compile as WolfSSL.")
+	set(WOLFSSL_OPENSSH yes CACHE BOOL "yes" FORCE)
+	set(WOLFSSL_ARC4 yes CACHE BOOL "yes" FORCE)
+	set(WOLFSSL_RSA yes)
+	set(WOLFSSL_DES3 yes)
+	set(WOLFSSL_HARDEN yes)
+
+	set(WOLFSSL_CRYPT_TESTS no)
+	set(WOLFSSL_EXAMPLES no)
+	target_compile_definitions(${PROJECT_NAME} PUBLIC WOLFSSL_ENABLED)
+	add_subdirectory("dependencies/wolfssl" EXCLUDE_FROM_ALL)
+	add_dependencies(${PROJECT_NAME} wolfssl)
+	target_link_libraries(${PROJECT_NAME} wolfssl)
+	target_compile_definitions(wolfssl PUBLIC WOLFSSL_ALLOW_RC4)
+endif()
+
+if(NOT ZLIB_FOUND AND STATIC)
 	add_dependencies(${TARGET_NAME} zlibstatic)
 	target_link_libraries(${TARGET_NAME} zlibstatic)
-elseif(NOT ZLIB_FOUND AND NOSTATIC)
+elseif(NOT ZLIB_FOUND AND NOT STATIC)
 	add_dependencies(${TARGET_NAME} zlib)
 	target_link_libraries(${TARGET_NAME} zlib)
 else()
@@ -224,3 +281,54 @@ if(WIN32)
 	target_link_libraries(${TARGET_NAME} ws2_32 wsock32 iphlpapi)
 endif()
 
+# Packaging
+if(APPLE)
+	set(CPACK_GENERATOR DragNDrop)
+	set(CPACK_DMG_VOLUME_NAME "${PROJECT_NAME} ${VER_FULL}")
+	set(
+			CPACK_DMG_DS_STORE_SETUP_SCRIPT
+			${PROJECT_SOURCE_DIR}/resources/packaging/osx/DMGSetup.scpt
+	)
+	set(
+			CPACK_DMG_BACKGROUND_IMAGE
+			${PROJECT_SOURCE_DIR}/resources/packaging/osx/DMGBackground.tif
+	)
+elseif(WIN32)
+	set(CPACK_GENERATOR "ZIP")
+elseif(AMIGA)
+	set(CPACK_GENERATOR LHA)
+else()
+	set(CPACK_GENERATOR TGZ)
+endif()
+
+set(CPACK_PACKAGE_NAME ${PROJECT_NAME_LOWER})
+set(CPACK_PACKAGE_VENDOR "OpenGraal Team")
+set(CPACK_PACKAGE_CONTACT "graal.in")
+set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${VER_CPACK}")
+set(CPACK_PACKAGE_VERSION_MAJOR ${VER_X})
+set(CPACK_PACKAGE_VERSION_MINOR ${VER_Y})
+set(CPACK_PACKAGE_VERSION_PATCH ${VER_Z}${VER_EXTRA})
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "GS2Lib")
+set(CPACK_PACKAGE_DESCRIPTION_FILE ${PROJECT_SOURCE_DIR}/README.md)
+set(CPACK_RESOURCE_FILE_README ${PROJECT_SOURCE_DIR}/README.md)
+set(CPACK_RESOURCE_FILE_LICENSE ${PROJECT_SOURCE_DIR}/LICENSE.md)
+set(CPACK_SOURCE_GENERATOR TGZ)
+set(CPACK_SOURCE_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${VER_CPACK}-src")
+set(CPACK_SOURCE_IGNORE_FILES "/build/;/.bzr/;~$;${CPACK_SOURCE_IGNORE_FILES}")
+
+if(NOT CPack_CMake_INCLUDED)
+	include(CPack)
+endif()
+
+# Install the library
+install(TARGETS ${TARGET_NAME}
+		DESTINATION ${CMAKE_INSTALL_LIBDIR}
+		EXPORT "${TARGET_NAME}-targets"
+		LIBRARY)
+
+# Install the headers
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
+		DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/
+		FILES_MATCHING PATTERN "*.h")
+
+set(GS2LIB_LOADED ON PARENT_SCOPE)

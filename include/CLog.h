@@ -92,7 +92,9 @@ class CLog
 		FILE* file;
 
 		//! Mutex
+#ifndef __AMIGA__
 		std::recursive_mutex* m_write;
+#endif
 };
 
 inline

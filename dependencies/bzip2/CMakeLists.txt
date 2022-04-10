@@ -19,38 +19,31 @@
 #  along with GS2Emu.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-set(
-    SOURCES
-    blocksort.c
-    bz2compress.c
-    randtable.c
-    huffman.c
-    crctable.c
-    decompress.c
-    bzlib.c
-)
+cmake_minimum_required(VERSION 3.0.0)
 
-set(
-    HEADERS
-    bzlib.h
-    bzlib_private.h
-)
+file(GLOB SOURCES src/*.c)
 
-set(TARGET_NAME "bzip2")
+file(GLOB HEADERS src/*.h)
+
+project(bzip2 C)
+
+set(TARGET_NAME ${PROJECT_NAME})
+
+set(CMAKE_DEBUG_POSTFIX _d)
+
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/${BIN_DIR})
+
+message(${PROJECT_SOURCE_DIR}/lib)
 
 if(APPLE)
-    add_library(${TARGET_NAME} ${SOURCES} ${HEADERS})
+    add_library(${TARGET_NAME} STATIC ${SOURCES} ${HEADERS})
 
     # Enable ARC (automatic reference counting) for OS X build
     set_property(
         TARGET ${TARGET_NAME} APPEND_STRING PROPERTY COMPILE_FLAGS "-fobjc-arc"
     )
-elseif(WIN32)
-    add_library(${TARGET_NAME} ${SOURCES} ${HEADERS})
-elseif(AROS)
-    add_library(${TARGET_NAME} ${SOURCES} ${HEADERS})
-elseif(AMIGA)
-    add_library(${TARGET_NAME} ${SOURCES} ${HEADERS})
 else()
-    add_library(${TARGET_NAME} ${SOURCES} ${HEADERS})
+    add_library(${TARGET_NAME} STATIC ${SOURCES} ${HEADERS})
 endif()

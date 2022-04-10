@@ -73,7 +73,7 @@ enum
 	PLI_SERVERWARP		= 41,
 	PLI_PROCESSLIST		= 44,
 	PLI_UNKNOWN46		= 46,	// Always is 1.  Might be a player count for the gmap level.
-	PLI_UNKNOWN47		= 47,	// Seems to tell the server the modTime of update files.  Used for client updates.
+	PLI_REQUESTUPDATEPACKAGE		= 47,	// Seems to tell the server the modTime of update files.  Used for client updates.
 	PLI_RAWDATA			= 50,
 	PLI_RC_SERVEROPTIONSGET		= 51,
 	PLI_RC_SERVEROPTIONSSET		= 52,
@@ -150,6 +150,7 @@ enum
 
 	PLI_UNKNOWN157				= 157,	// Something to do with ganis.
 	PLI_UPDATESCRIPT			= 158,	// {158}{script} Requests a script from the server.
+	PLI_UPDATEPACKAGEREQUESTFILE				= 159,	// {159]{(char)order?]{packagefilename}{modtime}
 	PLI_RC_FOLDERDELETE			= 160,
 	PLI_UPDATECLASS				= 161,	// {161}{INT5 modtime}{name} Class request.
 	PLI_RC_UNKNOWN162			= 162	// Blank packet, sent by RC3 beta.
@@ -247,12 +248,12 @@ enum
 	PLO_FILE					= 102,
 	PLO_RC_MAXUPLOADFILESIZE	= 103,	// {GINT5} - Upload file size limit in bytes. Default to 20 mebibytes
 	PLO_UNKNOWN104				= 104,	// Valid message in 5.07 and 6.037.  The code it uses is unique. -Codr
-	PLO_UNKNOWN105				= 105,	// Valid message in 5.07 and 6.037.  The code it uses is unique. -Codr
-	PLO_UNKNOWN106				= 106,	// Valid message in 5.07 and 6.037.  The code it uses is unique. -Codr
+	PLO_UPDATEPACKAGESIZE				= 105,	// Valid message in 5.07 and 6.037.  The code it uses is unique. -Codr
+	PLO_UPDATEPACKAGEDONE				= 106,	// Valid message in 5.07 and 6.037.  The code it uses is unique. -Codr
 	PLO_UNKNOWN107				= 107,	// Basically PLO_LEVELBOARD for extra level layers.
 	PLO_UNKNOWN109				= 109,	// Valid message in 6.037. -Codr
 	PLO_UNKNOWN111				= 111,	// Valid message in 6.037. -Codr
-	PLO_UNKNOWN124				= 124,	// 5/26/2019: RC3 receives this, only hint I seen was regarding receiving player flags? Didn't try to test it though 
+	PLO_UNKNOWN124				= 124,	// 5/26/2019: RC3 receives this, only hint I seen was regarding receiving player flags? Didn't try to test it though
 	PLO_NPCBYTECODE				= 131,	// Compiled Torque-script for an NPC. {131}{INT3 id}{code}
 	PLO_UNKNOWN132				= 132,	// Valid message in 5.07.  The code it uses is unique.  Unhandled by 6.037. -Codr
 	PLO_UNKNOWN133				= 133,	// Valid message in 5.07.  The code it uses is unique.  Unhandled by 6.037. -Codr
@@ -294,14 +295,14 @@ enum
 	PLO_UNKNOWN184				= 184,	// Valid message in 5.07.  The code it uses is unique.  The string "screenshots" is present in the code.  I didn't look in detail.  Unhandled by 6.037. -Codr
 	PLO_UNKNOWN185				= 185,	// Valid message in 5.07 and 6.037.  The code it uses is unique. -Codr
 	PLO_UNKNOWN186				= 186,	// Valid message in 5.07 and 6.037.  The code it uses is unique. -Codr
-	PLO_UNKNOWN187				= 187,	// Valid message in 5.07 and 6.037.  The code it uses is unique. -Codr
+	PLO_UPDATEPACKAGEISUPDATED	= 187,	// Valid message in 5.07 and 6.037.  The code it uses is unique. -Codr
 	PLO_NC_CLASSDELETE			= 188,	// {188}{class}  Codr note: Unhandled by 5.07+.
 	PLO_MOVE2					= 189,	// {189}{INT id}...
 	PLO_UNKNOWN190				= 190,	// Was blank.  Sent before weapon list. NOTE: Sending this packet makes the client login to irc, request bantypes, pmguilds, pmservers, globalpms, buddytracking and stuff... Mainly tied to setTex
 	PLO_UNKNOWN191				= 191,	// Valid message in 5.07 and 6.037.  The code it uses is unique. -Codr
 	PLO_NC_WEAPONGET			= 192,	// {192}{CHAR name length}{name}{CHAR image length}{image}{script}  Codr note: Unhandled by 5.07+.
 	PLO_UNKNOWN193				= 193,	// Valid message in 5.07.  The code it uses is unique.  The first parameter is likely a 5-byte integer.  There may be more.  Unhandled by 6.037. -Codr
-	PLO_UNKNOWN194				= 194,	// Was blank.  Sent before weapon list.
+	PLO_CLEARWEAPONS			= 194,	// Was blank.  Sent before weapon list. 
 	PLO_UNKNOWN195				= 195,	// Something to do with ganis.  [195] )twiz-icon"SETBACKTO "
 
 	// Seems to register NPCs or something on the client.
@@ -313,7 +314,9 @@ enum
 enum
 {
 	PLFLAG_NOMASSMESSAGE	= 0x01,
+	PLFLAG_ONLYSHOWONELEVEL	= 0x02,
 	PLFLAG_NOTOALL			= 0x04,
+	PLFLAG_VOICEDISABLED	= 0x08
 };
 
 enum
@@ -338,8 +341,9 @@ enum
 	PLTYPE_CLIENT3		= (int)(1 << 5),
 	PLTYPE_RC2			= (int)(1 << 6),
 	PLTYPE_EXTERNAL		= (int)(1 << 7),	// IRC client?
+	PLTYPE_WEB			= (int)(1 << 8),
 
-	PLTYPE_ANYCLIENT	= (int)(PLTYPE_CLIENT | PLTYPE_CLIENT2 | PLTYPE_CLIENT3),
+	PLTYPE_ANYCLIENT	= (int)(PLTYPE_CLIENT | PLTYPE_CLIENT2 | PLTYPE_CLIENT3 | PLTYPE_WEB ),
 	PLTYPE_ANYRC		= (int)(PLTYPE_RC | PLTYPE_RC2),
 	PLTYPE_ANYNC		= (int)(PLTYPE_NC),
 	PLTYPE_ANYCONTROL	= (int)(PLTYPE_ANYRC | PLTYPE_ANYNC),

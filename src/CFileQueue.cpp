@@ -60,8 +60,10 @@ void CFileQueue::addPacket(CString pPacket)
 			else
 			{
 				// Else, read to \n.
-				packet = CString() << pPacket.readString("\n") << "\n";
-
+				if (out_codec.getGen() == ENCRYPT_GEN_6)
+					packet = pPacket;
+				else
+					packet = CString() << pPacket.readString("\n") << "\n";
 				// Certain file related packets go to the file buffer since they must be
 				// sent in order.
 				switch (pId)
@@ -155,6 +157,7 @@ void CFileQueue::sendCompress()
 	switch (out_codec.getGen())
 	{
 		// Hijacking this: just send whatever is in the buffer
+		case ENCRYPT_GEN_6:
 		case ENCRYPT_GEN_1:
 		{
 			oBuffer << pSend;

@@ -487,5 +487,6 @@ inline CString& CString::guntokenizeI()
 	Friend Functions
 */
 CString getExtension(const CString& pStr);
+uint32_t calculateCrc32Checksum(const CString& pStr);
 
 #endif // CSTRING_H

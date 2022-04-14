@@ -1608,6 +1608,13 @@ CString getExtension(const CString& pStr)
 	return CString();
 }
 
+uint32_t calculateCrc32Checksum(const CString& pStr)
+{
+	uint32_t checksum = crc32(0L, Z_NULL, 0);
+	checksum = crc32(checksum, (const uint8_t *)pStr.text(), pStr.length());
+	return checksum;
+}
+
 #if defined(WOLFSSL_ENABLED)
 CString& CString::sha1I()
 {

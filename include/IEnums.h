@@ -71,9 +71,10 @@ enum
 	PLI_MAPINFO			= 39,
 	PLI_SHOOT			= 40,
 	PLI_SERVERWARP		= 41,
+	PLI_MUTEPLAYER		= 43,	// Triggered via playerlist -> mute, looks like {GSHORT playerId}{GBYTE 1/0}
 	PLI_PROCESSLIST		= 44,
 	PLI_UNKNOWN46		= 46,	// Always is 1.  Might be a player count for the gmap level.
-	PLI_REQUESTUPDATEPACKAGE		= 47,	// Seems to tell the server the modTime of update files.  Used for client updates.
+	PLI_VERIFYWANTSEND	= 47,	// {47}{GINT5:CRC32 Checksum]{GSTRING: Filename} - Check if the file is out of date, and if so send it
 	PLI_RAWDATA			= 50,
 	PLI_RC_SERVEROPTIONSGET		= 51,
 	PLI_RC_SERVEROPTIONSSET		= 52,
@@ -148,9 +149,9 @@ enum
 	PLI_RC_LARGEFILESTART		= 155,
 	PLI_RC_LARGEFILEEND			= 156,
 
-	PLI_UNKNOWN157				= 157,	// Something to do with ganis.
+	PLI_UNKNOWN157				= 157,	// Something to do with ganis.		-- Likely: PLI_UPDATEGANI [similar to UPDATECLASS], replies with 253? multiple replies in one
 	PLI_UPDATESCRIPT			= 158,	// {158}{script} Requests a script from the server.
-	PLI_UPDATEPACKAGEREQUESTFILE				= 159,	// {159]{(char)order?]{packagefilename}{modtime}
+	PLI_UPDATEPACKAGEREQUESTFILE= 159,	// {159]{(char)order?]{packagefilename}{modtime}
 	PLI_RC_FOLDERDELETE			= 160,
 	PLI_UPDATECLASS				= 161,	// {161}{INT5 modtime}{name} Class request.
 	PLI_RC_UNKNOWN162			= 162	// Blank packet, sent by RC3 beta.
@@ -248,8 +249,8 @@ enum
 	PLO_FILE					= 102,
 	PLO_RC_MAXUPLOADFILESIZE	= 103,	// {GINT5} - Upload file size limit in bytes. Default to 20 mebibytes
 	PLO_UNKNOWN104				= 104,	// Valid message in 5.07 and 6.037.  The code it uses is unique. -Codr
-	PLO_UPDATEPACKAGESIZE				= 105,	// Valid message in 5.07 and 6.037.  The code it uses is unique. -Codr
-	PLO_UPDATEPACKAGEDONE				= 106,	// Valid message in 5.07 and 6.037.  The code it uses is unique. -Codr
+	PLO_UPDATEPACKAGESIZE		= 105,	// Valid message in 5.07 and 6.037.  The code it uses is unique. -Codr
+	PLO_UPDATEPACKAGEDONE		= 106,	// Valid message in 5.07 and 6.037.  The code it uses is unique. -Codr
 	PLO_UNKNOWN107				= 107,	// Basically PLO_LEVELBOARD for extra level layers.
 	PLO_UNKNOWN109				= 109,	// Valid message in 6.037. -Codr
 	PLO_UNKNOWN111				= 111,	// Valid message in 6.037. -Codr

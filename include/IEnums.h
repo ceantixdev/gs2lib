@@ -149,7 +149,7 @@ enum
 	PLI_RC_LARGEFILESTART		= 155,
 	PLI_RC_LARGEFILEEND			= 156,
 
-	PLI_UNKNOWN157				= 157,	// Something to do with ganis.		-- Likely: PLI_UPDATEGANI [similar to UPDATECLASS], replies with 253? multiple replies in one
+	PLI_UPDATEGANI				= 157,	// Something to do with ganis.		-- Likely: PLI_UPDATEGANI [similar to UPDATECLASS], replies with 253? multiple replies in one
 	PLI_UPDATESCRIPT			= 158,	// {158}{script} Requests a script from the server.
 	PLI_UPDATEPACKAGEREQUESTFILE= 159,	// {159]{(char)order?]{packagefilename}{modtime}
 	PLI_RC_FOLDERDELETE			= 160,
@@ -258,7 +258,7 @@ enum
 	PLO_NPCBYTECODE				= 131,	// Compiled Torque-script for an NPC. {131}{INT3 id}{code}
 	PLO_UNKNOWN132				= 132,	// Valid message in 5.07.  The code it uses is unique.  Unhandled by 6.037. -Codr
 	PLO_UNKNOWN133				= 133,	// Valid message in 5.07.  The code it uses is unique.  Unhandled by 6.037. -Codr
-	PLO_UNKNOWN134				= 134,	// Might be used for package downloads.
+	PLO_GANISCRIPT				= 134,	// Might be used for package downloads. Looks to send gani scripts to client
 	PLO_NPCWEAPONSCRIPT			= 140,	// {140}{INT2 info_length}{script}
 	PLO_NPCDEL2					= 150,	// {150}{CHAR level_length}{level}{INT3 npcid}
 	PLO_HIDENPCS				= 151,

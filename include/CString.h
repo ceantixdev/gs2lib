@@ -126,6 +126,7 @@ class CString
 		CString rc4_decrypt(const char * key, int keylen) const;
 #endif
 		CString decodesimple(unsigned int buffSize = 65536, bool includeNullTermination = false) const;
+		CString codesimplefix0(unsigned int buffSize = 65536) const;
 		CString encodesimple(unsigned int buffSize = 65536) const;
 		CString base64encode() const;
 		CString base64decode() const;
@@ -167,6 +168,7 @@ class CString
 		CString& rc4_decryptI(const char * key, int keylen);
 #endif
 		CString& encodesimpleI(unsigned int buffSize = 65536);
+		CString& codesimplefix0I(unsigned int buffSize = 65536);
 		CString& decodesimpleI(unsigned int buffSize = 65536, bool includeNullTermination = false);
 		CString& base64encodeI();
 		CString& base64decodeI();

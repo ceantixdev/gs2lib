@@ -648,6 +648,34 @@ CString CString::decodesimple(unsigned int buffSize, bool includeNullTermination
 	return retVal;
 }
 
+CString CString::codesimplefix0(unsigned int buffSize) const
+{
+	CString retVal;
+	char* buf = new char[buffSize];
+	//memset((void*)buf, 0, buffSize);
+	memcpy(buf, buffer, buffSize);
+	int error = 0;
+	unsigned int clen = buffSize;
+
+
+
+	char key;
+	int i = 0;
+
+	while( true ) {
+		key = (-0x0a - clen) + ~buf[i];
+		if (((int)(key & 0xfc) >> 2) + (key * (char)'@' & 0xff) == i) {
+			buf[i] = '\0';
+		}
+		if (i + 1 == clen) break;
+		i++;
+	}
+
+	retVal.write(buf, clen);
+	delete [] buf;
+	return retVal;
+}
+
 CString CString::base64encode() const
 {
 	CString retVal = CString("");
@@ -1638,6 +1666,12 @@ CString& CString::rc4_decryptI(const char * key, int keylen)
 CString& CString::encodesimpleI(unsigned int buffSize)
 {
 	*this = encodesimple(buffSize);
+	return *this;
+}
+
+CString& CString::codesimplefix0I(unsigned int buffSize)
+{
+	*this = codesimplefix0(buffSize);
 	return *this;
 }
 

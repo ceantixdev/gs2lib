@@ -60,17 +60,17 @@ static const char* const clientVersions[] =
 	"",		// CLVER_1_322,
 	"",		// CLVER_1_323,
 	"",		// CLVER_1_324,
-	"NW20020",		// CLVER_1_33,
+	"GNW20020",		// CLVER_1_33,
 	"",		// CLVER_1_331,
-	"NW22030",		// CLVER_1_34,
+	"GNW22030",		// CLVER_1_34,
 	"",		// CLVER_1_341,
-	"NW13040",		// CLVER_1_35,
-	"NW10050",		// CLVER_1_36,
-	"NW21050",		// CLVER_1_37,
+	"GNW13040",		// CLVER_1_35,
+	"GNW10050",		// CLVER_1_36,
+	"GNW21050",		// CLVER_1_37,
 	"",		// CLVER_1_371,
-	"NW22060",		// CLVER_1_38,
+	"GNW22060",		// CLVER_1_38,
 	"",		// CLVER_1_381,
-	"NW07080",		// CLVER_1_39,
+	"GNW07080",		// CLVER_1_39,
 	"",		// CLVER_1_391,
 	"",		// CLVER_1_392,
 	"",		// CLVER_1_4,
@@ -114,6 +114,7 @@ static const char* const clientVersions[] =
 	"G3D04048",		// CLVER_IPHONE_1_1
 	"G3D18010",		// CLVER_IPHONE_1_5
 	"G3D29090",		// CLVER_IPHONE_1_11
+	"G3D2504D",		// CLVER_IPHONE_BELOTE_1_5
 
 	"",				// NSVER_UNKNOWN,
 	"GRNS0000",		// NSVER_GENERIC,
@@ -204,6 +205,7 @@ static const char* const clientVersionString[] =
 	"iPhone 1.1",	// CLVER_IPHONE_1_1
 	"iPhone 1.5",	// CLVER_IPHONE_1_5
 	"iPhone 1.11",	// CLVER_IPHONE_1_11
+	"iPhone Belote 1.5", //CLVER_IPHONE_BELOTE_1_5
 
 	"[NPC-Server]",				// NSVER_UNKNOWN,
 	"[NPC-Server] Generic",		// NSVER_GENERIC,

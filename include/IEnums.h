@@ -75,6 +75,7 @@ enum
 	PLI_PROCESSLIST		= 44,
 	PLI_UNKNOWN46		= 46,	// Always is 1.  Might be a player count for the gmap level.
 	PLI_VERIFYWANTSEND	= 47,	// {47}{GINT5:CRC32 Checksum]{GSTRING: Filename} - Check if the file is out of date, and if so send it
+	PLI_SHOOT2			= 48,
 	PLI_RAWDATA			= 50,
 	PLI_RC_SERVEROPTIONSGET		= 51,
 	PLI_RC_SERVEROPTIONSSET		= 52,
@@ -416,6 +417,7 @@ enum
 	SVI_REQUESTTEXT		= 19,
 	SVI_SENDTEXT		= 20,
 	SVI_PMPLAYER		= 29,
+	SVI_ASSIGNPCID		= 30,
 	SVI_PING			= 99,
 	SVI_RAWDATA			= 100,
 	SVI_PACKETCOUNT

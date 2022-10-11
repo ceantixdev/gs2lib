@@ -62,7 +62,7 @@
 	Constructor ~ Deconstructor
 */
 CString::CString(const char *pString)
-	: _heapBuffer(0), buffer(_internalBuffer), buffc(30), sizec(0), readc(0), writec(0)
+	: _heapBuffer(nullptr), buffer(_internalBuffer), buffc(30), sizec(0), readc(0), writec(0)
 {
 	if (pString != 0)
 	{
@@ -81,13 +81,25 @@ CString::CString(const char *pString)
 CString::CString(const std::string& pString)
 	: _heapBuffer(nullptr), buffer(_internalBuffer), buffc(30), sizec(0), readc(0), writec(0)
 {
-	write(pString.c_str(), pString.length());
+	if (pString.length())
+	{
+		write(pString.c_str(), pString.length());
+		return;
+	}
+
+	_internalBuffer[0] = 0;
 }
 
 CString::CString(const CString& pString)
 	: _heapBuffer(nullptr), buffer(_internalBuffer), buffc(30), sizec(0), readc(0), writec(0)
 {
-	write(pString.text(), pString.length());
+	if (pString.length())
+	{
+		write(pString.text(), pString.length());
+		return;
+	}
+
+	_internalBuffer[0] = 0;
 }
 
 CString::CString(double val)

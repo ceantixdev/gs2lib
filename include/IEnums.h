@@ -141,6 +141,9 @@ enum
 	PLI_NC_WEAPONADD			= 117,	// {117}{CHAR weapon length}{weapon}{CHAR image length}{image}{code}
 	PLI_NC_WEAPONDELETE			= 118,	// {118}{weapon}
 	PLI_NC_CLASSDELETE			= 119,	// {119}{class}
+
+	PLI_REQUESTUPDATEBOARD		= 130,  // {130}{CHAR level length}{level}{INT5 modtime}{SHORT x}{SHORT y}{SHORT width}{SHORT height}
+
 	PLI_NC_LEVELLISTGET			= 150,	// {150}
 	PLI_NC_LEVELLISTSET			= 151,	// {151}{GSTRING levels}
 

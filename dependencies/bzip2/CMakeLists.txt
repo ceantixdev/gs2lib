@@ -47,3 +47,7 @@ if(APPLE)
 else()
     add_library(${TARGET_NAME} STATIC ${SOURCES} ${HEADERS})
 endif()
+
+if(MSVC)
+    target_compile_definitions(${TARGET_NAME} PRIVATE -DSTDERR_FILENO=2)
+endif()

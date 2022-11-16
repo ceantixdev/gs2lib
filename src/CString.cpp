@@ -404,7 +404,7 @@ CString CString::unescape() const
 {
 	CString retVal;
 
-	for (auto i = 0; i < length() - 1; i++)
+	for (auto i = 0; i < length(); i++)
 	{
 		char cur = buffer[i];
 		char nex = buffer[++i];

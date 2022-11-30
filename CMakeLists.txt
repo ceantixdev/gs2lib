@@ -281,6 +281,12 @@ if(WIN32)
 	target_link_libraries(${TARGET_NAME} ws2_32 wsock32 iphlpapi)
 endif()
 
+if(MINGW)
+	option(MINGW_STDTHREADS_GENERATE_STDHEADERS "" ON)
+	add_subdirectory(dependencies/mingw_stdthreads)
+	target_link_libraries(${TARGET_NAME} mingw_stdthreads)
+endif()
+
 # Packaging
 if(APPLE)
 	set(CPACK_GENERATOR DragNDrop)

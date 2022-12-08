@@ -1659,33 +1659,21 @@ CString getExtension(const CString& pStr)
 	return {};
 }
 
-CString getPath(const CString& pStr)
+CString getPath(const CString& pStr, char separator)
 {
-	char separator =
-#ifdef WIN32
-	'\\';
-#else
-	'/';
-#endif
 	int pos = pStr.findl(separator);
 	if (pos >= 0)
-		return pStr.subString(0,pos);
+		return pStr.subString(0,pos+1);
 	return {};
 }
 
 
-CString getFilename(const CString& pStr)
+CString getFilename(const CString& pStr, char separator)
 {
-	char separator =
-#ifdef WIN32
-	'\\';
-#else
-	'/';
-#endif
 	int pos = pStr.findl(separator);
 	if (pos >= 0)
 		return pStr.subString(pos+1);
-	return {};
+	return pStr;
 }
 
 uint32_t calculateCrc32Checksum(const CString& pStr)

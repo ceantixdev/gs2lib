@@ -492,8 +492,20 @@ inline CString& CString::guntokenizeI()
 	Friend Functions
 */
 CString getExtension(const CString& pStr);
-CString getPath(const CString& pStr);
-CString getFilename(const CString& pStr);
+CString getPath(const CString& pStr, char separator =
+#ifdef WIN32
+'\\'
+#else
+'/'
+#endif
+);
+CString getFilename(const CString& pStr, char separator =
+#ifdef WIN32
+'\\'
+#else
+'/'
+#endif
+);
 uint32_t calculateCrc32Checksum(const CString& pStr);
 
 #endif // CSTRING_H

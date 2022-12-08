@@ -128,6 +128,7 @@ class CString
 		CString decodesimple(unsigned int buffSize = 65536, bool includeNullTermination = false) const;
 		CString codesimplefix0(unsigned int buffSize = 65536) const;
 		CString encodesimple(unsigned int buffSize = 65536) const;
+		static std::string formatBase64(std::size_t num, std::size_t len = 2);
 		CString base64encode() const;
 		CString base64decode() const;
 		CString bzcompress(unsigned int buffSize = 65536) const;
@@ -239,6 +240,8 @@ class CString
 		int buffc, sizec, readc, writec;
 		char * _heapBuffer;
 		char _internalBuffer[INTERNAL_BUFFER_SIZE];
+	private:
+		static const char BASE64[];
 };
 
 /*
@@ -489,6 +492,8 @@ inline CString& CString::guntokenizeI()
 	Friend Functions
 */
 CString getExtension(const CString& pStr);
+CString getPath(const CString& pStr);
+CString getFilename(const CString& pStr);
 uint32_t calculateCrc32Checksum(const CString& pStr);
 
 #endif // CSTRING_H

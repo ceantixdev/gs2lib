@@ -688,6 +688,17 @@ CString CString::codesimplefix0(unsigned int buffSize) const
 	return retVal;
 }
 
+const char CString::BASE64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+std::string CString::formatBase64(std::size_t num, std::size_t len) {
+	std::string str;
+	for ( std::size_t i = 0; i < len; ++i ) {
+		int index = (num >> (len - i - 1) * 6) & 0x3F; // 6 bit per character
+		str += BASE64[index];
+	}
+	return str;
+}
+
 CString CString::base64encode() const
 {
 	CString retVal = CString("");
@@ -1645,7 +1656,36 @@ CString getExtension(const CString& pStr)
 	int pos = pStr.findl('.');
 	if (pos >= 0)
 		return pStr.subString(pos);
-	return CString();
+	return {};
+}
+
+CString getPath(const CString& pStr)
+{
+	char separator =
+#ifdef WIN32
+	'\\';
+#else
+	'/';
+#endif
+	int pos = pStr.findl(separator);
+	if (pos >= 0)
+		return pStr.subString(0,pos);
+	return {};
+}
+
+
+CString getFilename(const CString& pStr)
+{
+	char separator =
+#ifdef WIN32
+	'\\';
+#else
+	'/';
+#endif
+	int pos = pStr.findl(separator);
+	if (pos >= 0)
+		return pStr.subString(pos+1);
+	return {};
 }
 
 uint32_t calculateCrc32Checksum(const CString& pStr)

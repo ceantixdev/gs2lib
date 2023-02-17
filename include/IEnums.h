@@ -27,7 +27,7 @@
 */
 // PLI_UNKNOWN## are packets sent by the client whose
 // purpose is unknown.
-enum
+typedef enum PlayerInPacket
 {
 	PLI_LEVELWARP		= 0,
 	PLI_BOARDMODIFY		= 1,
@@ -159,9 +159,9 @@ enum
 	PLI_RC_FOLDERDELETE			= 160,
 	PLI_UPDATECLASS				= 161,	// {161}{INT5 modtime}{name} Class request.
 	PLI_RC_UNKNOWN162			= 162	// Blank packet, sent by RC3 beta.
-};
+} PlayerInPacket;
 
-enum
+typedef enum PlayerOutPacket
 {
 	PLO_LEVELBOARD				= 0,
 	PLO_LEVELLINK				= 1,
@@ -314,7 +314,7 @@ enum
 	// Also is related to PLI_UPDATESCRIPT as it sends the last modification time of the NPC/weapon.  The v5 client stores weapon scripts offline.
 	PLO_UNKNOWN197				= 197,	// Seems to register npcs on the client.  Also is used by client to see if it needs to get a newer version of the offline cache of the NPC.
 	PLO_UNKNOWN198				= 198,	// Valid message in 6.037. -Codr
-};
+} PlayerOutPacket;
 
 enum
 {

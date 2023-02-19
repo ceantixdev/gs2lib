@@ -359,7 +359,7 @@ enum
 /*
 	Serverlist Enumerators
 */
-enum
+typedef enum ServerToListServer
 {
 	SVO_SETNAME			= 0,
 	SVO_SETDESC			= 1,
@@ -394,9 +394,9 @@ enum
 	SVO_REGISTERV3		= 30,
 	SVO_SENDTEXT		= 31,
 	SVO_PACKETCOUNT,
-};
+} ServerToListServer;
 
-enum
+typedef enum ListServerToServer
 {
 	SVI_VERIACC			= 0,	// deprecated
 	SVI_VERIGUILD		= 1,
@@ -424,6 +424,6 @@ enum
 	SVI_PING			= 99,
 	SVI_RAWDATA			= 100,
 	SVI_PACKETCOUNT
-};
+} ListServerToServer;
 
 #endif

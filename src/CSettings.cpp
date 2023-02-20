@@ -87,8 +87,9 @@ CString CSettings::getSettings()
 		CKey *option = this->getKey(name);
 
 		newOption = CString() << name << " = ";
-		if (option) {
-			newOption << option->value;
+		if (option)
+		{
+			newOption << option->value << option->rawvalue;
 			option->saved = true;
 		}
 
@@ -119,6 +120,9 @@ bool CSettings::loadSettings(CString& settings, bool fromRC, bool save)
 	// Parse Data
 	settings.removeAllI("\r");
 	strList = settings.tokenize("\n", true);
+	if (!strList.empty() && strList.back().trim().isEmpty())
+		strList.pop_back();
+
 	for (auto & str : strList)
 	{
 		// Strip out comments.
@@ -147,14 +151,8 @@ bool CSettings::loadSettings(CString& settings, bool fromRC, bool save)
 			j.trimI();
 
 		// Create Key
-		CKey *key;
-
-		// Strip out comment from value
-		int comment_pos2 = line[1].find("#");
-		if (comment_pos2 != -1)
-			line[1].removeI(comment_pos);
-
-		if ((key = getKey(line[0])) == nullptr)
+		CKey *key = getKey(line[0]);
+		if (key == nullptr)
 		{
 			keys.push_back(new CKey(line[0], line[1]));
 		}

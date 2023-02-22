@@ -243,7 +243,7 @@ if(WOLFSSL)
 	set(WOLFSSL_RSA yes)
 	set(WOLFSSL_DES3 yes)
 	set(WOLFSSL_HARDEN yes)
-
+	set(WOLFSSL_SP_MATH_ALL yes)
 	set(WOLFSSL_CRYPT_TESTS no)
 	set(WOLFSSL_EXAMPLES no)
 	target_compile_definitions(${PROJECT_NAME} PUBLIC WOLFSSL_ENABLED)

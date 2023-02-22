@@ -161,8 +161,6 @@ void CFileQueue::sendCompress()
 		case ENCRYPT_GEN_1:
 		{
 			oBuffer << pSend;
-			if (sock->webSocket)
-				webSocketFixOutgoingPacket(oBuffer);
 			unsigned int dsize = oBuffer.length();
 			oBuffer.removeI(0, sock->sendData(oBuffer.text(), &dsize));
 			break;
@@ -240,8 +238,11 @@ void CFileQueue::sendCompress()
 			// Encrypt the packet and add it to the out buffer.
 			out_codec.limitFromType(compressionType);
 			pSend = out_codec.encrypt(pSend);
+
 			CString data = CString() << (short)(pSend.length() + 1) << (char)compressionType << pSend;
 			oBuffer << data;
+			if (sock->webSocket)
+				webSocketFixOutgoingPacket(oBuffer);
 			unsigned int dsize = oBuffer.length();
 			oBuffer.removeI(0, sock->sendData(oBuffer.text(), &dsize));
 			break;

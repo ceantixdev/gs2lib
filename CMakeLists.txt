@@ -282,12 +282,13 @@ if(WIN32)
 	target_link_libraries(${TARGET_NAME} ws2_32 wsock32 iphlpapi)
 endif()
 
-if(MINGW)
-	option(MINGW_STDTHREADS_GENERATE_STDHEADERS "" ON)
-	add_subdirectory(dependencies/mingw_stdthreads)
-	target_link_libraries(${TARGET_NAME} mingw_stdthreads)
-	target_compile_definitions(mingw_stdthreads INTERFACE MINGW_STDTHREAD_REDUNDANCY_WARNING)
-endif()
+# Seems to be fixed in later versions of mingw
+#if(MINGW)
+#	option(MINGW_STDTHREADS_GENERATE_STDHEADERS "" ON)
+#	add_subdirectory(dependencies/mingw_stdthreads)
+#	target_link_libraries(${TARGET_NAME} mingw_stdthreads)
+#	target_compile_definitions(mingw_stdthreads INTERFACE MINGW_STDTHREAD_REDUNDANCY_WARNING)
+#endif()
 
 # Packaging
 if(APPLE)

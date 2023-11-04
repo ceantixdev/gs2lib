@@ -283,7 +283,7 @@ if(WIN32)
 endif()
 
 if(MINGW)
-	option(MINGW_STDTHREADS_GENERATE_STDHEADERS "" ON)
+	option(MINGW_STDTHREADS_GENERATE_STDHEADERS "" OFF)
 	add_subdirectory(dependencies/mingw_stdthreads)
 	target_link_libraries(${TARGET_NAME} mingw_stdthreads)
 	target_compile_definitions(mingw_stdthreads INTERFACE MINGW_STDTHREAD_REDUNDANCY_WARNING)

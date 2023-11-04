@@ -33,6 +33,7 @@ c:\mingw\bin\../lib/gcc/mingw32/4.6.2/include/c++/cstdio:166:11: erreur: '::snpr
 #define _WINSOCKAPI_
 #include <cstdlib>
 #include <cstdio>
+#include <cstdint>
 #include <cstring>
 #include <string>
 #include <vector>

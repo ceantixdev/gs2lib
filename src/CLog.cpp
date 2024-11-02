@@ -41,9 +41,12 @@
 
 static CString getBasePath();
 
+StringPrintCallback CLog::external_log_function = nullptr;
+
 CLog::CLog()
 : enabled(false), file(nullptr)
 {
+
 	m_write = new std::recursive_mutex();
 
 	// Get base path.
@@ -111,7 +114,13 @@ void CLog::out(const CString format, ...)
 	// Display message.
 	if (this->logToCliEnabled) {
 		va_start(s_format_v, format);
-		vprintf(format.text(), s_format_v);
+		if (!external_log_function) {
+			vprintf(format.text(), s_format_v);
+		} else {
+			char tmpBuf[1024];
+			vsprintf(tmpBuf,format.text(), s_format_v);
+			external_log_function(tmpBuf);
+		}
 		va_end(s_format_v);
 	}
 }
@@ -119,25 +128,32 @@ void CLog::out(const CString format, ...)
 void CLog::append(const CString format, ...)
 {
 	va_list s_format_v;
-	va_start(s_format_v, format);
+
 
 	std::lock_guard<std::recursive_mutex> lock(*m_write);
 
 	// Log output to file.
-	if ( enabled && nullptr != file)
+	if (enabled && nullptr != file)
 	{
 		// Write the message to the file.
-		vfprintf(file, format.text(), s_format_v);
-		fflush(file);
-		va_end(s_format_v);
 		va_start(s_format_v, format);
+		vfprintf(file, format.text(), s_format_v);
+		va_end(s_format_v);
+		fflush(file);
 	}
 
 	// Display message.
-	if (this->logToCliEnabled)
-		vprintf(format.text(), s_format_v);
-
-	va_end(s_format_v);
+	if (this->logToCliEnabled) {
+		va_start(s_format_v, format);
+		if (!external_log_function) {
+			vprintf(format.text(), s_format_v);
+		} else {
+			char tmpBuf[1024];
+			vsprintf(tmpBuf,format.text(), s_format_v);
+			external_log_function(tmpBuf);
+		}
+		va_end(s_format_v);
+	}
 }
 
 void CLog::clear()

@@ -28,6 +28,9 @@
 #include <condition_variable>
 #include "CString.h"
 
+// Typedef for the callback function pointer
+typedef void (*StringPrintCallback)(const char*);
+
 //! Logger class for logging information to a file.
 class CLog
 {
@@ -93,6 +96,8 @@ class CLog
 		//! Sets the name of the file to write to.
 		//! \param filename Name of the file to write to.
 		void setFilename(const CString& filename);
+
+		static StringPrintCallback external_log_function;
 
 	private:
 		//! If the class is enabled or not.

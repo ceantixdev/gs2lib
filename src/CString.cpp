@@ -24,6 +24,7 @@
 #include "CString.h"
 #include "bzlib.h"
 #include "zlib.h"
+#include <cstdint>
 
 #if defined(_WIN32) || defined(_WIN64)
 	extern "C" {

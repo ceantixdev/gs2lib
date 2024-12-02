@@ -37,6 +37,7 @@ c:\mingw\bin\../lib/gcc/mingw32/4.6.2/include/c++/cstdio:166:11: erreur: '::snpr
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <cstdint>
 
 /*
 #include "bzlib.h"
